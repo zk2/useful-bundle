@@ -1,0 +1,19 @@
+services:
+    
+    zk2.useful.type.entity_ajax_autocomplete:
+        class: Zk2\Bundle\UsefulBundle\Form\Type\EntityAjaxAutocompleteType
+        arguments: [@doctrine.orm.entity_manager]
+        tags:
+            - { name: form.type, alias: zk2_useful_entity_ajax_autocomplete }
+
+    zk2.useful.type.dependent_entity:
+        class: Zk2\Bundle\UsefulBundle\Form\Type\DependentEntityType
+        arguments: [@doctrine.orm.entity_manager]
+        tags:
+            - { name: form.type, alias: zk2_useful_dependent_entity }
+
+    zk2.useful.type.select2_multiple_entity:
+        class: Zk2\Bundle\UsefulBundle\Form\Type\Select2MultipleEntityType
+        arguments: [@doctrine.orm.entity_manager]
+        tags:
+            - { name: form.type, alias: zk2_useful_select2_multiple_entity }

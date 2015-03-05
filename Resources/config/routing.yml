@@ -1,0 +1,11 @@
+zk2_useful_ajax_autocomplete:
+    pattern:  /zk2_ajax_autocomplete
+    defaults: { _controller: Zk2UsefulBundle:UsefulForm:entityAjaxAutocomplete }
+    
+zk2_useful_dependent_entity:
+    pattern:  /zk2_dependent_entity
+    defaults: { _controller: Zk2UsefulBundle:UsefulForm:dependentEntity }
+
+zk2_useful_select2_entity:
+    pattern:  /zk2_select2_entity
+    defaults: { _controller: Zk2UsefulBundle:UsefulForm:entityAjaxAutocomplete }

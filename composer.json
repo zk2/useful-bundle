@@ -1,0 +1,28 @@
+{
+    "name": "zk2/useful-bundle",
+    "description": "Symfony2 Zk2UsefulBundle - make typical things easier",
+    "version" : "0.1.0",
+    "type" : "symfony-bundle",
+    "homepage": "https://github.com/zk2/useful-bundle",
+    "license": "MIT",
+    "keywords": ["DQL extra functions", "Ajax Autocomplete form type", "Dependent filtered form type", "Select2 multiple form type"],
+    "authors": [
+        {
+            "name": "Evgeniy Budanov",
+            "email": "budanov.ua@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.3.3",
+        "symfony/symfony": ">=2.1"
+    },
+    "autoload": {
+        "psr-0": { "Zk2\\Bundle\\UsefulBundle\\": "" }
+    },
+    "target-dir": "Zk2/Bundle/UsefulBundle/",
+    "extra" : {
+        "branch-alias" : {
+            "dev-master" : "0.1.x-dev"
+        }
+    }
+}
