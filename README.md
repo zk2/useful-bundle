@@ -7,5 +7,5 @@ Zk2UsefulBundle - make typical things easier
 
 ### Dependent filtered form type
 
-### Select2 multiple form type"
+### Select2 multiple form type
 
