@@ -153,3 +153,27 @@
     </script>
 
 {% endblock %}
+
+{% block zk2_multi_select_widget %}
+    {% spaceless %}
+    <script type="text/javascript">
+        if (typeof ZkMultiSelectWidget == 'undefined'){
+            document.write(
+                '<link href="{{ asset('/bundles/zk2useful/css/jquery.ZkMultiSelectWidget.css') }}" rel="stylesheet" />' +
+                '<script src="{{ asset('/bundles/zk2useful/js/jquery.ZkMultiSelectWidget.js') }}"><\/script>'
+            );
+        }
+        $(function(){
+            $( "#{{ id }}" ).ZkMultiSelectWidget({
+                ZkHeight: {{ ZkHeight }},
+                ZkWidth:  {{ ZkWidth }},
+                ZkSearch: {{ ZkSearch }},
+                ZkRange:  {{ ZkRange }},
+	        ZkDescr:  {{ ZkDescr|raw }},
+	        ZkOptionsDisabled: {{ ZkOptionsDisabled|raw }}
+            });
+        });
+    </script>
+    {{ block('choice_widget_collapsed') }}
+    {% endspaceless %}
+{% endblock %}

@@ -17,3 +17,8 @@ services:
         arguments: [@doctrine.orm.entity_manager]
         tags:
             - { name: form.type, alias: zk2_useful_select2_multiple_entity }
+
+    zk2.useful.type.multi_select:     
+        class:  Zk2\Bundle\UsefulBundle\Form\Extension\Zk2MultiSelectType
+        tags:
+            - { name: form.type, alias: zk2_multi_select }
