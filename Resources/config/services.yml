@@ -22,3 +22,8 @@ services:
         class:  Zk2\Bundle\UsefulBundle\Form\Extension\Zk2MultiSelectType
         tags:
             - { name: form.type, alias: zk2_multi_select }
+    
+    zk2.useful.twig_extension:     
+        class: Zk2\Bundle\UsefulBundle\Twig\Extension\UsefulExtension
+        tags:       
+            -  { name: twig.extension }
