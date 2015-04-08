@@ -23,7 +23,6 @@ class UsefulExtension extends Twig_Extension
             'wordPreview'    => new \Twig_Function_Method($this, 'renderWordPreview', array('is_safe' => array('html'))),
             'textPreview'    => new \Twig_Function_Method($this, 'renderTextPreview', array('is_safe' => array('html'))),
             'zkMatches'      => new \Twig_Function_Method($this, 'renderMatches', array('is_safe' => array('html'))),
-            'formatDatetime' => new \Twig_Function_Method($this, 'renderFormatDatetime', array('is_safe' => array('html'))),
             'zkPregMatch'    => new \Twig_Function_Method($this, 'renderZkPregMatch', array('is_safe' => array('html'))),
             'zkTranschoice'  => new \Twig_Function_Method($this, 'renderZkTranschoice', array('is_safe' => array('html'))),
         );
