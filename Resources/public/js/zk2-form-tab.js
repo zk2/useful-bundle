@@ -54,3 +54,4 @@
             }
         }
     };
+    $(function(){ ZkTab.init('zkTab'); });
