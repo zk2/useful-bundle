@@ -25,6 +25,7 @@ class UsefulExtension extends Twig_Extension
             'zkMatches'      => new \Twig_Function_Method($this, 'renderMatches', array('is_safe' => array('html'))),
             'zkPregMatch'    => new \Twig_Function_Method($this, 'renderZkPregMatch', array('is_safe' => array('html'))),
             'zkTranschoice'  => new \Twig_Function_Method($this, 'renderZkTranschoice', array('is_safe' => array('html'))),
+            'zkSelect'       => new \Twig_Function_Method($this, 'renderZkSelect', array('is_safe' => array('html'))),
         );
     }
 
@@ -118,6 +119,18 @@ class UsefulExtension extends Twig_Extension
             : ((($int % 10 >= 2) and ($int % 10 <= 4) and
             (($int % 100 < 10) or ($int % 100 >= 20))) ? 1 : 2);
         return $variantes[$key];
+    }
+    
+    /**
+     *  ZkSelect
+     *
+     *  @param integer $key
+     *  @param array $variantes
+     *  @return string
+     */
+    public function renderZkSelect($key, array $variantes)
+    {
+        return isset($variantes[$key]) ? $variantes[$key] : null;
     }
 
 ###########################################################################################3
