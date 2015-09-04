@@ -56,6 +56,7 @@ class UsefulExtension extends Twig_Extension
     {
         $text = strip_tags($text,'<a><img>');
         $words = explode(' ', $text);
+        if(count($words) <= $count_words) return $text;
         $text = '';
         $cou = 0;
         $is_big = false;
