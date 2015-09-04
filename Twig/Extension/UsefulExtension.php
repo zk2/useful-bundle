@@ -52,9 +52,9 @@ class UsefulExtension extends Twig_Extension
      *  @param integer $count_words
      *  @return string or false
      */
-    public function renderTextPreview($text, $count_words=20)
+    public function renderTextPreview($text, $count_words=20, $strip_tags=true)
     {
-        $text = strip_tags($text,'<a><img>');
+        if($strip_tags) $text = strip_tags($text,'<a><img>');
         $words = explode(' ', $text);
         if(count($words) <= $count_words) return $text;
         $text = '';
