@@ -17,7 +17,7 @@
         "symfony/symfony": ">=2.6"
     },
     "autoload": {
-        "psr-0": { "Zk2\\Bundle\\UsefulBundle\\": "" }
+        "psr-4" : { "Zk2\\UsefulBundle\\" : "" }
     },
     "target-dir": "Zk2/Bundle/UsefulBundle/",
     "extra" : {
