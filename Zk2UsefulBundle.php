@@ -1,6 +1,6 @@
 <?php
 
-namespace Zk2\Bundle\UsefulBundle;
+namespace Zk2\UsefulBundle;
 
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 
