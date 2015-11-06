@@ -19,7 +19,7 @@
     "autoload": {
         "psr-4" : { "Zk2\\UsefulBundle\\" : "" }
     },
-    "target-dir": "Zk2/Bundle/UsefulBundle/",
+    "target-dir": "Zk2/UsefulBundle/",
     "extra" : {
         "branch-alias" : {
             "dev-master" : "0.2.x-dev"
