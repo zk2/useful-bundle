@@ -1,41 +1,44 @@
 {% block zk2_useful_entity_ajax_autocomplete_widget %}
     <style>
-        .zk2_loader{background: url('{{ asset('bundles/zk2useful/images/ajax-loader.gif' ) }}') no-repeat right 2% center;}
+        .zk2_loader {
+            background: url('{{ asset('bundles/zk2useful/images/ajax-loader.gif' ) }}') no-repeat right 2% center;
+        }
     </style>
     <script type="text/javascript">
-        if (typeof typeahead == 'undefined'){
+        if (typeof typeahead == 'undefined') {
             document.write(
-                '<script src="{{ asset('/bundles/zk2useful/js/bootstrap3-typeahead.min.js') }}"><\/script>'
+                    '<script src="{{ asset('/bundles/zk2useful/js/bootstrap3-typeahead.min.js') }}"><\/script>'
             );
         }
-        $(function() {
+        $(function () {
             var $input = $("#{{ form.vars.id }}");
-            $input.attr('autocomplete','off');
+            $input.attr('autocomplete', 'off');
             var ul_width = $input.outerWidth(true);
             $input.typeahead({
-                menu: '<ul class="typeahead dropdown-menu" style="width:'+ul_width+'px;" role="listbox"></ul>',
-                source: function(query, process){
+                menu: '<ul class="typeahead dropdown-menu" style="width:' + ul_width + 'px;" role="listbox"></ul>',
+                source: function (query, process) {
                     $input.addClass('zk2_loader');
                     return $.post(
-                        '{{ path('zk2_useful_ajax_autocomplete') }}',{
-                            'prop': query,
-                            'class': "{{ class|raw }}",
-                            'property': "{{ property|raw }}",
-                            'condition_operator': "{{ condition_operator|raw }}",
-                            'query': "{{ query|url_encode }}", 
-                            'em_name': "{{ em_name }}",
-                            'max_rows': "{{ max_rows }}"
-                        }, function (data) {
-                            $input.removeClass('zk2_loader');
-                            return process(data.options);
-                        });
+                            '{{ path('zk2_useful_ajax_autocomplete') }}', {
+                                'prop': query,
+                                'class': "{{ class|raw }}",
+                                'property': "{{ property|raw }}",
+                                'condition_operator': "{{ condition_operator|raw }}",
+                                'query': "{{ query|url_encode }}",
+                                'em_name': "{{ em_name }}",
+                                'max_rows': "{{ max_rows }}"
+                            }, function (data) {
+                                $input.removeClass('zk2_loader');
+                                return process(data.options);
+                            });
                 },
                 autoSelect: true,
-                {% for key,value in options %}
-                {{ key }}: {{ (value matches '/^([0-9]+|function.*|true|false)$/' ) ? value|raw : ("'"~value~"'")|raw }},
-                {% endfor %}
-            }); 
+            {% for key,value in options %}
+            {{ key }}: {{ (value matches '/^([0-9]+|function.*|true|false)$/' ) ? value|raw : ("'"~value~"'")|raw }},
+            {% endfor %}
         });
+        })
+        ;
     </script>
     {{ form_widget(form) }}
 
@@ -43,14 +46,16 @@
 
 {% block zk2_useful_dependent_entity_widget %}
     <style>
-        .zk2_loader{background: url('{{ asset('bundles/zk2useful/images/ajax-loader.gif' ) }}') no-repeat right 16px center;}
+        .zk2_loader {
+            background: url('{{ asset('bundles/zk2useful/images/ajax-loader.gif' ) }}') no-repeat right 16px center;
+        }
     </style>
     {% set attr = attr|merge({ 'class': (attr.class|default('') ~ ' form-control')|trim }) %}
     <select {{ block('widget_attributes') }}></select>
 
     <script type="text/javascript">
-        $(function(){
-            $("#{{ form.parent.offsetGet( parent_field ).vars.id }}").change( function() {
+        $(function () {
+            $("#{{ form.parent.offsetGet( parent_field ).vars.id }}").change(function () {
                 var selected_index = {{ value ? value : 0 }};
                 $("#{{ form.vars.id }}").addClass('zk2_loader');
                 $.ajax({
@@ -62,16 +67,16 @@
                         'parent_field': "{{ parent_field }}",
                         'property': "{{ property }}",
                         'em_name': "{{ em_name }}",
-                        'query': "{{ query|url_encode }}", 
+                        'query': "{{ query|url_encode }}",
                         'order_property': "{{ order_property }}",
                         'order_direction': "{{ order_direction }}",
                         'no_result_msg': "{{ no_result_msg }}",
                     },
-                    url:"{{ path('zk2_useful_dependent_entity') }}",
-                    success: function(msg){
-                        if (msg != ''){
+                    url: "{{ path('zk2_useful_dependent_entity') }}",
+                    success: function (msg) {
+                        if (msg != '') {
                             $("#{{ form.vars.id }}").html(msg).show();
-                            $.each($("#{{ form.vars.id }} option"), function (index, option){
+                            $.each($("#{{ form.vars.id }} option"), function (index, option) {
                                 if ($(option).val() == selected_index)
                                     $(option).prop('selected', true);
                             })
@@ -81,8 +86,8 @@
                             $("#{{ form.vars.id }}").removeClass('zk2_loader');
                         }
                     },
-                    error: function(xhr, ajaxOptions, thrownError){
-                    $('html').html(xhr.responseText);
+                    error: function (xhr, ajaxOptions, thrownError) {
+                        $('html').html(xhr.responseText);
                     }
                 });
             });
@@ -94,7 +99,7 @@
 
 
 {% block zk2_useful_select2_multiple_entity_widget %}
-    
+
     {% set attr = attr|merge({ 'class': (attr.class|default('') ~ ' form-control')|trim }) %}
     <select {{ block('widget_attributes') }} multiple="multiple">
         {% for key,val in value %}
@@ -102,13 +107,13 @@
         {% endfor %}
     </select>
     <script type="text/javascript">
-        if (typeof select2 == 'undefined'){
+        if (typeof select2 == 'undefined') {
             document.write(
-                '<link href="{{ asset('/bundles/zk2useful/css/select2.min.css') }}" rel="stylesheet" />' +
-                '<script src="{{ asset('/bundles/zk2useful/js/select2.min.js') }}"><\/script>'
+                    '<link href="{{ asset('/bundles/zk2useful/css/select2.min.css') }}" rel="stylesheet" />' +
+                    '<script src="{{ asset('/bundles/zk2useful/js/select2.min.js') }}"><\/script>'
             );
         }
-        $(function() {
+        $(function () {
             $("#{{ form.vars.id }}").select2({
                 multiple: true,
                 minimumInputLength: 1,
@@ -127,25 +132,28 @@
                         };
                     },
                     processResults: function (data, page) {
-                        return { results: data.options };
+                        return {results: data.options};
                     },
                     cache: true
                 },
-                {% for key,value in options %}
-                {{ key }}: {{ (value matches '/^([0-9]+|function.*|true|false)$/' ) ? value|raw : ("'"~value~"'")|raw }},
-                {% endfor %}
-                templateResult: functionFormat,
-                templateSelection: functionFormatSelection
-            });
+            {% for key,value in options %}
+            {{ key }}: {{ (value matches '/^([0-9]+|function.*|true|false)$/' ) ? value|raw : ("'"~value~"'")|raw }},
+            {% endfor %}
+            templateResult: functionFormat,
+                    templateSelection
+            :
+            functionFormatSelection
         });
-        function functionFormat (item) {
+        })
+        ;
+        function functionFormat(item) {
             if (item.loading) return 'Searching...';
             var markup = '<div class="clearfix">' +
-            '<div class="col-sm-12">' + item.name || item.text + '</div></div>';
+                    '<div class="col-sm-12">' + item.name || item.text + '</div></div>';
             return markup;
         }
-        function functionFormatSelection (item) {
-            if( item.name ) item.text = item.name;
+        function functionFormatSelection(item) {
+            if (item.name) item.text = item.name;
             item.selected = true;
             console.log(item);
             return item.name || item.text;
@@ -154,26 +162,81 @@
 
 {% endblock %}
 
-{% block zk2_multi_select_widget %}
+{% block zk2_useful_multiselect_type_widget %}
     {% spaceless %}
-    <script type="text/javascript">
-        if (typeof ZkMultiSelectWidget == 'undefined'){
-            document.write(
-                '<link href="{{ asset('/bundles/zk2useful/css/jquery.ZkMultiSelectWidget.css') }}" rel="stylesheet" />' +
-                '<script src="{{ asset('/bundles/zk2useful/js/jquery.ZkMultiSelectWidget.js') }}"><\/script>'
-            );
-        }
-        $(function(){
-            $( "#{{ id }}" ).ZkMultiSelectWidget({
-                ZkHeight: {{ ZkHeight }},
-                ZkWidth:  {{ ZkWidth }},
-                ZkSearch: {{ ZkSearch }},
-                ZkRange:  {{ ZkRange }},
-	        ZkDescr:  {{ ZkDescr|raw }},
-	        ZkOptionsDisabled: {{ ZkOptionsDisabled|raw }}
+        <script type="text/javascript">
+            if (typeof ZkMultiSelectWidget == 'undefined') {
+                document.write(
+                        '<link href="{{ asset('/bundles/zk2useful/css/jquery.ZkMultiSelectWidget.css') }}" rel="stylesheet" />' +
+                        '<script src="{{ asset('/bundles/zk2useful/js/jquery.ZkMultiSelectWidget.js') }}"><\/script>'
+                );
+            }
+            $(function () {
+                $("#{{ id }}").ZkMultiSelectWidget({
+                    ZkHeight: {{ ZkHeight }},
+                    ZkWidth:  {{ ZkWidth }},
+                    ZkSearch: {{ ZkSearch }},
+                    ZkRange:  {{ ZkRange }},
+                    ZkDescr:  {{ ZkDescr|raw }},
+                    ZkOptionsDisabled: {{ ZkOptionsDisabled|raw }}
+                });
             });
-        });
-    </script>
-    {{ block('choice_widget_collapsed') }}
+        </script>
+        {{ block('choice_widget_collapsed') }}
+    {% endspaceless %}
+{% endblock %}
+
+{% block zk2_useful_multiselect_choice_type_widget %}
+    {{ block('zk2_useful_multiselect_type_widget') }}
+{% endblock %}
+
+{% block zk2_useful_multiselect_entity_type_widget %}
+    {{ block('zk2_useful_multiselect_type_widget') }}
+{% endblock %}
+
+{% block zk2_useful_base_file_type_widget %}
+    {{ block('zk2_useful_file_type_widget') }}
+{% endblock %}
+
+{% block zk2_useful_thumbnail_file_type_widget %}
+    {{ block('zk2_useful_file_type_widget') }}
+{% endblock %}
+
+{% block zk2_useful_file_type_widget %}
+    {% spaceless %}
+        <script type="text/javascript">
+            if (typeof Fileinput == 'undefined') {
+                document.write(
+                        '<link href="{{ asset('/bundles/zk2useful/css/jasny-bootstrap.css') }}" rel="stylesheet" />' +
+                        '<script src="{{ asset('/bundles/zk2useful/js/zkFileInput.js') }}"><\/script>'
+                );
+            }
+        </script>
+        {% if widget_type == 'thumbnail' %}
+            <div class="fileinput fileinput-new" data-provides="fileinput">
+                <div class="fileinput-preview thumbnail" data-trigger="fileinput"
+                     style="width: {{ widget_width }}; height: {{ widget_height }};">
+                    {% if image_url %}<img src="{{ image_url }}" alt="" title=""/>{% endif %}
+                </div>
+                <div>
+                    <span class="btn btn-xs btn-default btn-file">
+                        <span class="fileinput-new">{{ select_label }}</span>
+                        <span class="fileinput-exists">{{ change_label }}</span>
+                        {{ block('form_widget') }}
+                    </span>
+                    <a href="#" class="btn btn-xs btn-default fileinput-exists" data-dismiss="fileinput">{{ remove_label }}</a>
+                </div>
+            </div>
+        {% elseif widget_type == 'base' %}
+            <div class="fileinput fileinput-new" data-provides="fileinput">
+                <span class="btn btn-default btn-file">
+                    <span class="fileinput-new">{{ select_label }}</span>
+                    <span class="fileinput-exists">{{ change_label }}</span>
+                    {{ block('form_widget') }}
+                </span>
+                <span class="fileinput-filename"></span>
+                <a href="#" class="close fileinput-exists" data-dismiss="fileinput" style="float: none">&times;</a>
+            </div>
+        {% endif %}
     {% endspaceless %}
 {% endblock %}

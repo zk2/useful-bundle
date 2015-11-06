@@ -1,20 +1,19 @@
 <?php
 
-namespace Zk2\Bundle\UsefulBundle\Form\DataTransformer;
+namespace Zk2\UsefulBundle\Form\DataTransformer;
 
-use Symfony\Component\Form\DataTransformerInterface;
 use Doctrine\ORM\EntityManager;
-use Symfony\Component\Form\Exception\UnexpectedTypeException;
-use Symfony\Component\Form\Exception\TransformationFailedException;
+use Symfony\Component\Form\DataTransformerInterface;
 use Symfony\Component\Form\Exception\InvalidConfigurationException;
+use Symfony\Component\Form\Exception\TransformationFailedException;
+use Symfony\Component\Form\Exception\UnexpectedTypeException;
 
 class EntityToIdTransformer implements DataTransformerInterface
 {
     protected
         $em,
         $class,
-        $unitOfWork
-    ;
+        $unitOfWork;
 
     public function __construct(EntityManager $em, $class)
     {
@@ -25,14 +24,14 @@ class EntityToIdTransformer implements DataTransformerInterface
 
     public function transform($entity)
     {
-        if (null === $entity || '' === $entity){
+        if (null === $entity || '' === $entity) {
             return 'null';
         }
-        
+
         if (!is_object($entity)) {
             throw new UnexpectedTypeException($entity, 'object');
         }
-        
+
         if (!$this->unitOfWork->isInIdentityMap($entity)) {
             throw new InvalidConfigurationException('Entities passed to the choice field must be managed');
         }
@@ -47,7 +46,7 @@ class EntityToIdTransformer implements DataTransformerInterface
         }
 
         if (!is_numeric($id)) {
-            throw new UnexpectedTypeException($id, 'numeric ' . $id);
+            throw new UnexpectedTypeException($id, 'numeric '.$id);
         }
 
         $entity = $this->em->getRepository($this->class)->findOneById($id);

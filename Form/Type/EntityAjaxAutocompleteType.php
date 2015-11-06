@@ -1,21 +1,21 @@
 <?php
 
-namespace Zk2\Bundle\UsefulBundle\Form\Type;
+namespace Zk2\UsefulBundle\Form\Type;
 
+use Doctrine\Common\Persistence\ObjectManager;
+use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Exception\FormException;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\Form\FormView;
-use Symfony\Component\Form\Exception\FormException;
-use Zk2\Bundle\UsefulBundle\Form\DataTransformer\EntityToPropertyTransformer;
-use Symfony\Component\Form\AbstractType;
-use Symfony\Component\OptionsResolver\OptionsResolverInterface;
-use Doctrine\Common\Persistence\ObjectManager;
+use Symfony\Component\OptionsResolver\OptionsResolver;
+use Zk2\UsefulBundle\Form\DataTransformer\EntityToPropertyTransformer;
 
 class EntityAjaxAutocompleteType extends AbstractType
 {
     private $om;
 
-    public function __construct( ObjectManager $om )
+    public function __construct(ObjectManager $om)
     {
         $this->om = $om;
     }
@@ -30,51 +30,55 @@ class EntityAjaxAutocompleteType extends AbstractType
             throw new FormException('Option "property" is empty');
         }
 
-        $builder->addViewTransformer(new EntityToPropertyTransformer(
-            $this->om,
-            $options['class'],
-            $options['property']
-        ), true);
-        
+        $builder->addViewTransformer(
+            new EntityToPropertyTransformer(
+                $this->om,
+                $options['class'],
+                $options['property']
+            ),
+            true
+        );
+
         $query = $options['query'];
-        
-        if ($query instanceof \Closure)
-        {
+
+        if ($query instanceof \Closure) {
             $queryBuilder = $query($this->om->getRepository($options['class']));
             $query = $queryBuilder->getQuery()->getDql();
         }
 
-        $builder->setAttribute('em_name',            $options['em_name']);
-        $builder->setAttribute('class',              $options['class']);
-        $builder->setAttribute('property',           $options['property']);
-        $builder->setAttribute('query',              $query);
+        $builder->setAttribute('em_name', $options['em_name']);
+        $builder->setAttribute('class', $options['class']);
+        $builder->setAttribute('property', $options['property']);
+        $builder->setAttribute('query', $query);
         $builder->setAttribute('condition_operator', $options['condition_operator']);
-        $builder->setAttribute('max_rows',           $options['max_rows']);
-        $builder->setAttribute('options',            $options['options']);
+        $builder->setAttribute('max_rows', $options['max_rows']);
+        $builder->setAttribute('options', $options['options']);
     }
 
     public function buildView(FormView $view, FormInterface $form, array $options)
     {
-        $view->vars['class'] =              $form->getConfig()->getAttribute('class');
-        $view->vars['property'] =           $form->getConfig()->getAttribute('property');
+        $view->vars['class'] = $form->getConfig()->getAttribute('class');
+        $view->vars['property'] = $form->getConfig()->getAttribute('property');
         $view->vars['condition_operator'] = $form->getConfig()->getAttribute('condition_operator');
-        $view->vars['query'] =              $form->getConfig()->getAttribute('query');
-        $view->vars['em_name'] =            $form->getConfig()->getAttribute('em_name');
-        $view->vars['max_rows'] =           $form->getConfig()->getAttribute('max_rows');
-        $view->vars['options'] =            $form->getConfig()->getAttribute('options');
+        $view->vars['query'] = $form->getConfig()->getAttribute('query');
+        $view->vars['em_name'] = $form->getConfig()->getAttribute('em_name');
+        $view->vars['max_rows'] = $form->getConfig()->getAttribute('max_rows');
+        $view->vars['options'] = $form->getConfig()->getAttribute('options');
     }
 
-    public function setDefaultOptions(OptionsResolverInterface $resolver)
+    public function configureOptions(OptionsResolver $resolver)
     {
-        $resolver->setDefaults(array(
-            'class'              => null,
-            'property'           => null,
-            'condition_operator' => 'begins_with',
-            'em_name'            => 'default',
-            'query'              => null,
-            'max_rows'           => 100,
-            'options'            => array()
-        ));
+        $resolver->setDefaults(
+            array(
+                'class' => null,
+                'property' => null,
+                'condition_operator' => 'begins_with',
+                'em_name' => 'default',
+                'query' => null,
+                'max_rows' => 100,
+                'options' => array(),
+            )
+        );
     }
 
     public function getName()

@@ -1,29 +1,48 @@
 services:
+
+    zk2.useful.twig_extension:
+        class: Zk2\UsefulBundle\Twig\Extension\UsefulExtension
+        tags:
+            -  { name: twig.extension }
     
     zk2.useful.type.entity_ajax_autocomplete:
-        class: Zk2\Bundle\UsefulBundle\Form\Type\EntityAjaxAutocompleteType
+        class: Zk2\UsefulBundle\Form\Type\EntityAjaxAutocompleteType
         arguments: [@doctrine.orm.entity_manager]
         tags:
             - { name: form.type, alias: zk2_useful_entity_ajax_autocomplete }
 
     zk2.useful.type.dependent_entity:
-        class: Zk2\Bundle\UsefulBundle\Form\Type\DependentEntityType
+        class: Zk2\UsefulBundle\Form\Type\DependentEntityType
         arguments: [@doctrine.orm.entity_manager]
         tags:
             - { name: form.type, alias: zk2_useful_dependent_entity }
 
     zk2.useful.type.select2_multiple_entity:
-        class: Zk2\Bundle\UsefulBundle\Form\Type\Select2MultipleEntityType
+        class: Zk2\UsefulBundle\Form\Type\Select2MultipleEntityType
         arguments: [@doctrine.orm.entity_manager]
         tags:
             - { name: form.type, alias: zk2_useful_select2_multiple_entity }
-
-    zk2.useful.type.multi_select:     
-        class:  Zk2\Bundle\UsefulBundle\Form\Extension\Zk2MultiSelectType
-        tags:
-            - { name: form.type, alias: zk2_multi_select }
     
-    zk2.useful.twig_extension:     
-        class: Zk2\Bundle\UsefulBundle\Twig\Extension\UsefulExtension
-        tags:       
-            -  { name: twig.extension }
+    zk2_useful.multiselect_choice.form.type:
+        class: Zk2\UsefulBundle\Form\Type\Zk2MultiSelectType
+        arguments: ["choice"]
+        tags:
+            - { name: form.type, alias: zk2_useful_multiselect_choice_type }
+    
+    zk2_useful.multiselect_entity.form.type:
+        class: Zk2\UsefulBundle\Form\Type\Zk2MultiSelectType
+        arguments: ["entity"]
+        tags:
+            - { name: form.type, alias: zk2_useful_multiselect_entity_type }
+
+    zk2.useful.base.file.type:
+        class: Zk2\UsefulBundle\Form\Type\ZkFileType
+        arguments: ["base"]
+        tags:
+            - { name: form.type, alias: zk2_useful_base_file_type }
+
+    zk2.useful.thumbnail.file.type:
+        class: Zk2\UsefulBundle\Form\Type\ZkFileType
+        arguments: ["thumbnail"]
+        tags:
+            - { name: form.type, alias: zk2_useful_thumbnail_file_type }

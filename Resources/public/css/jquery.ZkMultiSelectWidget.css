@@ -1,14 +1,17 @@
-.zk-general-div{
+.zk-general-div {
     padding: 3px;
     margin: 0 auto;
 }
-.zk-main-div{
+
+.zk-main-div {
     display: inline-block;
 }
-.zk-header-div{
+
+.zk-header-div {
     display: inline-block;
 }
-.zk-descr-div{
+
+.zk-descr-div {
     border: 1px solid green;
     -webkit-border-radius: 3px;
     -moz-border-radius: 3px;
@@ -17,20 +20,24 @@
     background: #D5FFCE;
     font-size: 10px;
 }
-.zk-header{
+
+.zk-header {
     margin-left: 5px;
     margin-bottom: 5px;
     float: left;
 }
-.zk-func-div{
+
+.zk-func-div {
     width: 40px;
     text-align: center;
 }
-.zk-range-div{
+
+.zk-range-div {
     width: 40px;
     text-align: center;
 }
-.zk-child-div{
+
+.zk-child-div {
     float: left;
     -moz-user-select: none;
     -khtml-user-select: none;
@@ -39,11 +46,13 @@
     user-select: none;
     overflow: auto !important;
 }
-.zk-child-div ul{
+
+.zk-child-div ul {
     margin: 0;
     padding: 0;
 }
-.zk-child-div li{
+
+.zk-child-div li {
     overflow: hidden;
     border: none;
     border-bottom: 1px solid #E0E0E0;
@@ -52,45 +61,54 @@
     cursor: pointer;
     font-size: 11px;
 }
-.zk-li-act{
+
+.zk-li-act {
     border: none;
     background: #CCCCFF;
 }
-.zk-li-act-nofocus{
+
+.zk-li-act-nofocus {
     background: #D4D4D6 !important;
 }
-.zk-p{
+
+.zk-p {
     width: 20px;
     margin-left: 10px;
     padding: 1px 4px 1px 4px;
     border: 1px solid #999999;
     font-size: 24px;
 }
-.zk-range-p{
+
+.zk-range-p {
     /*width: 15px;*/
     margin-left: 5px;
     padding: 1px 4px 5px 4px;
     border: 1px solid #999999;
     font-size: 20px;
 }
-.zk-noact-p{
+
+.zk-noact-p {
     background: #B7B7B7;
 }
-.zk-act-p{
+
+.zk-act-p {
     cursor: pointer;
     font-weight: bold;
     background: #7E7E7F;
 }
-.zk-search-input{
+
+.zk-search-input {
     width: 140px !important;
     height: 20px !important;
     padding: 1px !important;
     font-size: 11px !important;
 }
-.zk-act-p:hover{
+
+.zk-act-p:hover {
     background: #3F3F3F;
     color: #FFFFFF;
 }
-.zk-disabled{
+
+.zk-disabled {
     color: #999999;
 }
