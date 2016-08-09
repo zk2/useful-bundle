@@ -1,11 +1,11 @@
 {
     "name": "zk2/useful-bundle",
     "description": "Symfony2 Zk2UsefulBundle - make typical things easier",
-    "version" : "0.2.0",
+    "version" : "2.0.0",
     "type" : "symfony-bundle",
     "homepage": "https://github.com/zk2/useful-bundle",
     "license": "MIT",
-    "keywords": ["Ajax Autocomplete form type", "Dependent filtered form type", "Select2 multiple form type"],
+    "keywords": ["Ajax Autocomplete form type", "Dependent filtered form type", "Select2 multiple form type", "Upload file form type"],
     "authors": [
         {
             "name": "Evgeniy Budanov",
@@ -13,15 +13,15 @@
         }
     ],
     "require": {
-        "php": ">=5.3.3",
-        "symfony/symfony": ">=2.6"
+        "php": ">=5.5.9",
+        "symfony/symfony": ">=2.8"
     },
     "autoload": {
         "psr-4" : { "Zk2\\UsefulBundle\\" : "" }
     },
     "extra" : {
         "branch-alias" : {
-            "dev-master" : "0.2.x-dev"
+            "dev-master" : "1.0.x-dev"
         }
     }
 }

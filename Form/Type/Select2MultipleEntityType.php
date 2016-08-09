@@ -2,8 +2,10 @@
 
 namespace Zk2\UsefulBundle\Form\Type;
 
-use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\ORM\EntityManager;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Exception\InvalidConfigurationException;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\Form\FormView;
@@ -12,19 +14,23 @@ use Zk2\UsefulBundle\Form\DataTransformer\EntityToSelect2Transformer;
 
 class Select2MultipleEntityType extends AbstractType
 {
-    private $om;
+    private $em;
 
-    public function __construct(ObjectManager $om)
+    public function __construct(EntityManager $em)
     {
-        $this->om = $om;
+        $this->em = $em;
     }
 
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
+        if (null === $options['class']) {
+            throw new InvalidConfigurationException('Option "class" is empty');
+        }
+
         $builder->resetViewTransformers();
         $builder->addViewTransformer(
             new EntityToSelect2Transformer(
-                $this->om,
+                $this->em,
                 $options['class']
             ),
             true
@@ -63,14 +69,14 @@ class Select2MultipleEntityType extends AbstractType
         );
     }
 
-    public function getName()
+    public function getBlockPrefix()
     {
         return 'zk2_useful_select2_multiple_entity';
     }
 
     public function getParent()
     {
-        return 'choice';
+        return ChoiceType::class;
     }
 
 }

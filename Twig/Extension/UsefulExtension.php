@@ -17,14 +17,10 @@ class UsefulExtension extends Twig_Extension
     public function getFunctions()
     {
         return array(
-            'wordPreview' => new \Twig_Function_Method($this, 'renderWordPreview', array('is_safe' => array('html'))),
-            'textPreview' => new \Twig_Function_Method($this, 'renderTextPreview', array('is_safe' => array('html'))),
-            'zkMatches' => new \Twig_Function_Method($this, 'renderMatches', array('is_safe' => array('html'))),
-            'zkPregMatch' => new \Twig_Function_Method($this, 'renderZkPregMatch', array('is_safe' => array('html'))),
-            'zkTranschoice' => new \Twig_Function_Method(
-                $this, 'renderZkTranschoice', array('is_safe' => array('html'))
-            ),
-            'zkSelect' => new \Twig_Function_Method($this, 'renderZkSelect', array('is_safe' => array('html'))),
+            new \Twig_SimpleFunction('wordPreview', 'renderWordPreview'),
+            new \Twig_SimpleFunction('textPreview', 'renderTextPreview'),
+            new \Twig_SimpleFunction('zkPlural', 'renderZkPlural'),
+            new \Twig_SimpleFunction('zkSelect', 'renderZkSelect'),
         );
     }
 
@@ -32,13 +28,13 @@ class UsefulExtension extends Twig_Extension
      *  Renders Word Preview
      *
      * @param string $text
-     * @param integer $count_synbols
+     * @param integer $countSymbols
      * @return string or false
      */
-    public function renderWordPreview($text, $count_synbols = 10)
+    public function renderWordPreview($text, $countSymbols = 10)
     {
-        if (strlen($text) > $count_synbols) {
-            $text = substr($text, 0, $count_synbols).'...';
+        if (strlen($text) > $countSymbols) {
+            $text = substr($text, 0, $countSymbols) . '...';
         }
 
         return $text;
@@ -48,85 +44,63 @@ class UsefulExtension extends Twig_Extension
      *  Renders Text Preview
      *
      * @param string $text
-     * @param integer $count_words
-     * @return string or false
+     * @param integer $countWords
+     * @return string
      */
-    public function renderTextPreview($text, $count_words = 20)
+    public function renderTextPreview($text, $countWords = 20)
     {
         $text = strip_tags($text, '<a><img>');
         $words = explode(' ', $text);
-        $text = '';
-        $cou = 0;
-        $is_big = false;
+        $newText = '';
+        $count = 0;
+        $isBig = false;
 
         foreach ($words as $word) {
             if ($word) {
-                if ($cou <= $count_words) {
-                    $text .= ' '.$word;
-                    $cou++;
+                if ($count <= $countWords) {
+                    $newText .= ' ' . $word;
+                    $count++;
                 } else {
-                    $text .= '...';
-                    $is_big = true;
+                    $newText .= '...';
+                    $isBig = true;
                     break;
                 }
             }
         }
 
-        return $is_big ? $text : false;
-    }
-
-    /**
-     *  Twig preg_match
-     *
-     * @param $item
-     * @param $pattern
-     * @return boolean
-     */
-    public function renderMatches($pattern, $item)
-    {
-        return strpos($item, $pattern) !== false;
-        //return preg_match($pattern,$item);
-    }
-
-    /**
-     *  ZkPregMatch
-     *
-     * @param string $pattern
-     * @param string $subject
-     * @return boolean
-     */
-    public function renderZkPregMatch($pattern, $subject)
-    {
-        return preg_match($pattern, $subject);
+        return $isBig ? $newText : $text;
     }
 
 
     /**
-     *  ZkTranschoice
+     *  ZkPlural
      *
      * @param integer $int
-     * @param array $variantes
+     * @param array $variants
      * @return string
      */
-    public function renderZkTranschoice($int, array $variantes)
+    public function renderZkPlural($int, array $variants)
     {
-        $key = (($int % 10 == 1) and ($int % 100 != 11)) ? 0
-            : ((($int % 10 >= 2) and ($int % 10 <= 4) and
-                (($int % 100 < 10) or ($int % 100 >= 20))) ? 1 : 2);
+        $key = (($int % 10 == 1) and ($int % 100 != 11))
+            ? 0
+            : ((($int % 10 >= 2) and ($int % 10 <= 4) and (($int % 100 < 10) or ($int % 100 >= 20)))
+                ? 1
+                : 2
+            );
 
-        return $variantes[$key];
+        return $variants[$key];
     }
 
     /**
      *  ZkSelect
      *
      * @param integer $key
-     * @param array $variantes
+     * @param array $variants
      * @return string
      */
-    public function renderZkSelect($key, array $variantes)
+    public function renderZkSelect($key, array $variants)
     {
-        return isset($variantes[$key]) ? $variantes[$key] : null;
+        return isset($variants[$key]) ? $variants[$key] : null;
     }
 
 ###########################################################################################3
@@ -138,25 +112,10 @@ class UsefulExtension extends Twig_Extension
     public function getFilters()
     {
         return array(
-            'newStr' => new \Twig_Filter_Method($this, 'newStrFilter'),
-            'strExplode' => new \Twig_Filter_Method($this, 'strExplodeFilter'),
-            'print_r' => new \Twig_Filter_Method($this, 'printRFilter'),
-            'in_string' => new \Twig_Filter_Method($this, 'inStringFilter'),
-            'int_to_time' => new \Twig_Filter_Method($this, 'intToTimeFilter'),
-            'int_to_date' => new \Twig_Filter_Method($this, 'intToDateFilter'),
+            new \Twig_SimpleFilter('strExplode', array($this, 'strExplodeFilter')),
+            new \Twig_SimpleFilter('int_to_time', array($this, 'intToTimeFilter')),
+            new \Twig_SimpleFilter('int_to_date', array($this, 'intToDateFilter')),
         );
-    }
-
-    /**
-     *  newStrFilter
-     *
-     * @param string $str
-     *
-     * @return str_replace(', ','<br>',$str)
-     */
-    public function newStrFilter($str)
-    {
-        return str_replace(', ', '<br>', $str);
     }
 
     /**
@@ -172,38 +131,12 @@ class UsefulExtension extends Twig_Extension
         foreach ($array as $value) {
             $i = 0;
             foreach ($value as $key => $val) {
-                $str .= str_repeat('&nbsp;&nbsp;&nbsp;&nbsp;', $i).$val.'<br>';
+                $str .= str_repeat('&nbsp;&nbsp;&nbsp;&nbsp;', $i) . $val . '<br>';
                 $i++;
             }
         }
 
         return $str;
-    }
-
-    /**
-     *  printRFilter
-     *
-     * @param string $arr
-     *
-     * @return print_r($arr)
-     */
-    public function printRFilter($arr)
-    {
-        return print_r($arr);
-    }
-
-    /**
-     *  inStringFilter
-     *
-     * @param string $text
-     *
-     * @return $text в одну строку
-     */
-    public function inStringFilter($text)
-    {
-        $text = preg_replace('|\s+|', ' ', $text);
-
-        return $text;
     }
 
     /**
@@ -216,7 +149,7 @@ class UsefulExtension extends Twig_Extension
     public function intToTimeFilter($int)
     {
         $date = new \DateTime(date('Y-m-d 00:00:00'));
-        $date->modify($int.' second');
+        $date->modify($int . ' second');
 
         return $date->format('H:i');
     }

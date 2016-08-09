@@ -2,9 +2,10 @@
 
 namespace Zk2\UsefulBundle\Form\Type;
 
-use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\ORM\EntityManager;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Exception\InvalidConfigurationException;
+use Symfony\Component\Form\Extension\Core\Type\FormType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\Form\FormView;
@@ -13,11 +14,11 @@ use Zk2\UsefulBundle\Form\DataTransformer\EntityToIdTransformer;
 
 class DependentEntityType extends AbstractType
 {
-    private $om;
+    private $em;
 
-    public function __construct(ObjectManager $om)
+    public function __construct(EntityManager $em)
     {
-        $this->om = $om;
+        $this->em = $em;
     }
 
     public function buildForm(FormBuilderInterface $builder, array $options)
@@ -36,7 +37,7 @@ class DependentEntityType extends AbstractType
 
         $builder->addViewTransformer(
             new EntityToIdTransformer(
-                $this->om,
+                $this->em,
                 $options['class']
             ),
             true
@@ -45,7 +46,7 @@ class DependentEntityType extends AbstractType
         $query = $options['query'];
 
         if ($query instanceof \Closure) {
-            $queryBuilder = $query($this->om->getRepository($options['class']));
+            $queryBuilder = $query($this->em->getRepository($options['class']));
             $query = $queryBuilder->getQuery()->getDql();
         }
 
@@ -94,10 +95,10 @@ class DependentEntityType extends AbstractType
 
     public function getParent()
     {
-        return 'form';
+        return FormType::class;
     }
 
-    public function getName()
+    public function getBlockPrefix()
     {
         return 'zk2_useful_dependent_entity';
     }

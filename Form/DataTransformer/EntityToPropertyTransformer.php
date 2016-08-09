@@ -2,23 +2,25 @@
 
 namespace Zk2\UsefulBundle\Form\DataTransformer;
 
-use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\ORM\EntityManager;
 use Symfony\Component\Form\DataTransformerInterface;
 use Symfony\Component\Form\Exception\InvalidConfigurationException;
+use Symfony\Component\Form\Exception\TransformationFailedException;
 use Symfony\Component\PropertyAccess\PropertyAccess;
+use Symfony\Component\Form\Exception\UnexpectedTypeException;
 
 class EntityToPropertyTransformer implements DataTransformerInterface
 {
     protected
-        $om,
+        $em,
         $class,
         $property,
         $unitOfWork;
 
-    public function __construct(ObjectManager $om, $class, $property)
+    public function __construct(EntityManager $em, $class, $property)
     {
-        $this->om = $om;
-        $this->unitOfWork = $this->om->getUnitOfWork();
+        $this->em = $em;
+        $this->unitOfWork = $this->em->getUnitOfWork();
         $this->class = $class;
         $this->property = $property;
     }
@@ -29,12 +31,16 @@ class EntityToPropertyTransformer implements DataTransformerInterface
             return null;
         }
 
+        if (!is_object($entity)) {
+            throw new UnexpectedTypeException($entity, 'object');
+        }
+
         if (!$this->unitOfWork->isInIdentityMap($entity)) {
             throw new InvalidConfigurationException('Entities passed to the choice field must be managed');
         }
 
         if ($this->property) {
-            $propertyAccessor = PropertyAccess::getPropertyAccessor();
+            $propertyAccessor = PropertyAccess::createPropertyAccessor();
 
             return $propertyAccessor->getValue($entity, $this->property);
         }
@@ -43,13 +49,17 @@ class EntityToPropertyTransformer implements DataTransformerInterface
     }
 
 
-    public function reverseTransform($prop_value)
+    public function reverseTransform($propValue)
     {
-        if (!$prop_value) {
+        if (!$propValue) {
             return null;
         }
 
-        $entity = $this->om->getRepository($this->class)->findOneBy(array($this->property => $prop_value));
+        $entity = $this->em->getRepository($this->class)->findOneBy(array($this->property => $propValue));
+
+        if ($entity === null) {
+            throw new TransformationFailedException(sprintf('The entity with key "%s" could not be found', $id));
+        }
 
         return $entity;
     }

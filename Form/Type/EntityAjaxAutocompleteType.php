@@ -2,9 +2,10 @@
 
 namespace Zk2\UsefulBundle\Form\Type;
 
-use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\ORM\EntityManager;
 use Symfony\Component\Form\AbstractType;
-use Symfony\Component\Form\Exception\FormException;
+use Symfony\Component\Form\Exception\InvalidConfigurationException;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\Form\FormView;
@@ -13,26 +14,26 @@ use Zk2\UsefulBundle\Form\DataTransformer\EntityToPropertyTransformer;
 
 class EntityAjaxAutocompleteType extends AbstractType
 {
-    private $om;
+    private $em;
 
-    public function __construct(ObjectManager $om)
+    public function __construct(EntityManager $em)
     {
-        $this->om = $om;
+        $this->em = $em;
     }
 
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
         if (null === $options['class']) {
-            throw new FormException('Option "class" is empty');
+            throw new InvalidConfigurationException('Option "class" is empty');
         }
 
         if (null === $options['property']) {
-            throw new FormException('Option "property" is empty');
+            throw new InvalidConfigurationException('Option "property" is empty');
         }
 
         $builder->addViewTransformer(
             new EntityToPropertyTransformer(
-                $this->om,
+                $this->em,
                 $options['class'],
                 $options['property']
             ),
@@ -42,7 +43,7 @@ class EntityAjaxAutocompleteType extends AbstractType
         $query = $options['query'];
 
         if ($query instanceof \Closure) {
-            $queryBuilder = $query($this->om->getRepository($options['class']));
+            $queryBuilder = $query($this->em->getRepository($options['class']));
             $query = $queryBuilder->getQuery()->getDql();
         }
 
@@ -81,13 +82,13 @@ class EntityAjaxAutocompleteType extends AbstractType
         );
     }
 
-    public function getName()
+    public function getBlockPrefix()
     {
         return 'zk2_useful_entity_ajax_autocomplete';
     }
 
     public function getParent()
     {
-        return 'text';
+        return TextType::class;
     }
 }

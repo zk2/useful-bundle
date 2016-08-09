@@ -2,9 +2,10 @@
 
 namespace Zk2\UsefulBundle\Model;
 
-use AppBundle\Model\AttachModelException;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\Validator\Constraints as Assert;
+use Zk2\UsefulBundle\Zk2UsefulBundle;
+use Zk2\UsefulBundle\Model\AttachModelException;
 
 /**
  * AttachModelTrait
@@ -12,6 +13,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 trait AttachModelTrait
 {
     /**
+     * @var UploadedFile $totalFile
      * @Assert\File(
      *     maxSizeMessage = "Max file size 20Mb",
      *     maxSize = "20480k",
@@ -22,61 +24,74 @@ trait AttachModelTrait
     protected $totalFile;
 
     /**
-     * @var array $width_height
+     * @var array $widthHeight
      */
-    protected $width_height;
+    protected $widthHeight = array();
 
     /**
-     * @var array $width_preview
+     * @var array $widthHeightPreview
      */
-    protected $width_height_preview;
+    protected $widthHeightPreview = array();
 
     /**
-     * @var integer $min_width
+     * @var integer $minWidth
      */
-    protected $min_width;
+    protected $minWidth;
 
     /**
-     * @var integer $min_height
+     * @var integer $minHeight
      */
-    protected $min_height;
+    protected $minHeight;
+
+    /**
+     * @var string $minPrefix
+     */
+    protected $minPrefix = 'min_';
 
     /**
      * Get upload path
      *
      * @return string
      */
-    abstract protected function getUploadPath();
+    abstract public function getUploadPath();
 
     /**
-     * Set Widht Height
+     * Upload Image
+     *
+     * @return string
+     */
+    abstract public function uploadImage();
+
+    /**
+     * Set Width Height
      *
      * @param integer $width
      * @param integer $height
      */
-    public function setWidhtHeight($width, $height)
+    public function setWidthHeight($width, $height = 0)
     {
-        $this->width_height = array((integer)$width, (integer)$height);
+        $this->widthHeight = array(abs((integer)$width), abs((integer)$height));
     }
 
     /**
-     * Set Widht Preview
+     * Set Width Height Preview
      *
      * @param integer $width
+     * @param integer $height
      */
-    public function setWidhtHeightPreview($width, $height)
+    public function setWidthHeightPreview($width, $height = 0)
     {
-        $this->width_height_preview = array((integer)$width, (integer)$height);
+        $this->widthHeightPreview = array(abs((integer)$width), abs((integer)$height));
     }
 
     /**
-     * Set min Widht
+     * Set min Width
      *
      * @param integer $width
      */
-    public function setMinWidht($width)
+    public function setMinWidth($width)
     {
-        $this->min_width = (integer)$width;
+        $this->minWidth = abs((integer)$width);
     }
 
     /**
@@ -86,15 +101,25 @@ trait AttachModelTrait
      */
     public function setMinHeight($height)
     {
-        $this->min_height = (integer)$height;
+        $this->minHeight = abs((integer)$height);
+    }
+
+    /**
+     * Get totalFile
+     *
+     * @return string
+     */
+    public function getMinPrefix()
+    {
+        return $this->minPrefix;
     }
 
     /**
      * Set totalFile
      *
-     * @param string $totalFile
+     * @param UploadedFile $totalFile
      */
-    public function setTotalFile($totalFile = null)
+    public function setTotalFile(UploadedFile $totalFile = null)
     {
         $this->totalFile = $totalFile;
     }
@@ -110,14 +135,14 @@ trait AttachModelTrait
     }
 
     /**
-     * Get web upload path
+     * Get root web path
      *
-     * @param null|string $uploadPath
      * @return string
      */
-    public function getFullUploadPath($uploadPath = null)
+    public function getFullWebPath()
     {
-        return $uploadPath ?: $this->getUploadPath();
+        //return realpath(__DIR__.'/../../../../web');
+        return Zk2UsefulBundle::getFullWebPath();
     }
 
     /**
@@ -125,144 +150,131 @@ trait AttachModelTrait
      *
      * @return string
      */
-    public function getRootWebPath()
+    public function getFullUploadPath()
     {
-        return realpath(__DIR__.'/../../../../web');
-    }
-
-    /**
-     * Get root web path
-     *
-     * @return string
-     */
-    public function getFullRootPath()
-    {
-        return $this->getRootWebPath().$this->getFullUploadPath();
+        return
+            rtrim(
+                rtrim($this->getFullWebPath(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $this->getUploadPath(),
+                DIRECTORY_SEPARATOR
+            );
     }
 
     /**
      * Upload file
      *
-     * @param string $uploadPath
-     * @param string $fileName
-     * @return bool|string
+     * @param null $fileName
+     * @return bool|null|string
+     * @throws AttachModelException
      */
-    public function uploadFile($uploadPath = null, $fileName = null, $return_full = true)
+    public function uploadFile($fileName = null)
     {
         if (!$this->totalFile instanceof UploadedFile) {
             return false;
+        }
+
+        if (!class_exists('Imagick')) {
+            throw new AttachModelException('The requested PHP extension ext-imagick * is missing from your system.');
         }
 
         if (null === $fileName) {
             if (null === $ext = $this->totalFile->guessExtension()) {
                 $ext = $this->totalFile->getExtension();
             }
-
             $fileName = sha1(uniqid(mt_rand(), true));
-
             if (null !== $ext) {
-                $fileName .= '.'.$ext;
+                $fileName .= '.' . $ext;
             }
         } else {
-            if(!$ext = substr($fileName, strrpos($fileName, '.') + 1)){
-                if($ex = $this->totalFile->getClientOriginalExtension()) {
-                    $fileName .= '.'.$ex;
+            if (!$ext = substr($fileName, strrpos($fileName, '.') + 1)) {
+                if ($ex = $this->totalFile->getClientOriginalExtension()) {
+                    $fileName .= '.' . $ex;
                 }
             }
         }
 
-        $fullUploadPath = $this->getFullUploadPath($uploadPath);
-        $rootPath = $this->getRootWebPath();
-        if (!is_dir($rootPath.$fullUploadPath)) {
-            mkdir($rootPath.$fullUploadPath, 0775, true);
+        $fullUploadPath = $this->getFullUploadPath();
+        if (!is_dir($fullUploadPath)) {
+            if (!mkdir($fullUploadPath, 0775, true)) {
+                throw new AttachModelException('Not possible create UploadDirectory: '. $fullUploadPath);
+            }
         }
-
-        $movePath = $rootPath.$fullUploadPath;
 
         $move = false;
 
-        if ($this->width_height) {
+        if ($this->widthHeight) {
             $move = $this->resize(
-                $this->totalFile->getRealPath(),
-                $movePath,
+                $fullUploadPath,
                 $fileName,
-                $this->width_height,
-                null
+                $this->widthHeight
             );
+            if ($this->widthHeightPreview) {
+                $this->resize(
+                    $fullUploadPath,
+                    $this->getMinPrefix() . $fileName,
+                    $this->widthHeightPreview
+                );
+            }
         }
 
-        if (is_array($this->width_height_preview) and array_sum($this->width_height_preview)) {
-            $this->resize(
-                $this->totalFile->getRealPath(),
-                $movePath,
-                $fileName,
-                $this->width_height_preview,
-                'preview_'
-            );
-        }
-
-        if (!$move and class_exists('Imagick')) {
+        if (!$move) {
             $source = new \Imagick($this->totalFile->getRealPath());
-            $source->writeImage($movePath.'/'.$fileName);
+            $source->writeImage($fullUploadPath . DIRECTORY_SEPARATOR . $fileName);
         }
 
-        return $return_full ? $fullUploadPath.'/'.$fileName : $fileName;
+        return $fileName;
     }
+
 
     /**
      * Resize image
+     *
+     * @param $fullUploadPath
+     * @param $fileName
+     * @param array $widthHeight
+     * @return bool
+     * @throws AttachModelException
      */
-    protected function resize($path, $movePath, $fileName, array $width_height, $prefix = null)
+    protected function resize($fullUploadPath, $fileName, array $widthHeight)
     {
-        if (!is_array($this->width_height_preview) or !array_sum($width_height)) {
+        if (!array_sum($widthHeight)) {
             return false;
         }
 
-        if (class_exists('Imagick')) {
-            $ext = substr($fileName, strrpos($fileName, '.') + 1);
+        $ext = substr($fileName, strrpos($fileName, '.') + 1);
 
-            if (!in_array($ext, array('jpg', 'png', 'gif', 'jpeg'))) {
-                throw new AttachModelException('Images only jpg, png, gif, jpeg --- '.$ext);
-            }
-
-            $source = new \Imagick(realpath($path));
-            $source_width = $source->getImageWidth();
-            $source_height = $source->getImageHeight();
-            $width = $width_height[0];
-            $height = $width_height[1];
-
-            if ($width == 0 or $height == 0) {
-                if ($width) {
-                    $source->thumbnailImage($width, 0);
-                    $source->writeImage($movePath.'/'.$prefix.$fileName);
-
-                    return true;
-                } elseif ($height) {
-                    $source->thumbnailImage(0, $height);
-                    $source->writeImage($movePath.'/'.$prefix.$fileName);
-
-                    return true;
-                }
-            } elseif ($source_width >= $width and $source_height >= $height) {
-                if ($width == $height and $source_width >= $source_height) {
-                    $source->thumbnailImage(0, $height);
-                    $r = (integer)(($source->getImageWidth() - $width) / 2);
-                    $source->cropImage($width, $height, $r, 0);
-                    $source->writeImage($movePath.'/'.$prefix.$fileName);
-
-                    return true;
-                }
-                $source->thumbnailImage($width, 0);
-                $r = (integer)(($source->getImageHeight() - $height) / 2);
-                $source->cropImage($width, $height, 0, $r);
-                $source->writeImage($movePath.'/'.$prefix.$fileName);
-
-                return true;
-            } else {
-                throw new AttachModelException($source_width.'x'.$source_height);
-            }
+        if (!in_array($ext, array('jpg', 'png', 'gif', 'jpeg'))) {
+            throw new AttachModelException('Only JPG, JPEG, GIF or PNG format... ' . $ext);
         }
 
-        return false;
+        $source = new \Imagick(realpath($this->totalFile->getRealPath()));
+        $sourceWidth = $source->getImageWidth();
+        $sourceHeight = $source->getImageHeight();
+        $width = $widthHeight[0];
+        $height = $widthHeight[1];
+
+        if ($width == 0 or $height == 0) {
+            if ($width) $source->thumbnailImage($width, 0);
+            elseif ($height) $source->thumbnailImage(0, $height);
+            $source->writeImage($fullUploadPath . DIRECTORY_SEPARATOR . $fileName);
+
+            return true;
+        } elseif ($sourceWidth >= $width and $sourceHeight >= $height) {
+            if ($width == $height and $sourceWidth >= $sourceHeight) {
+                $source->thumbnailImage(0, $height);
+                $r = (integer)(($source->getImageWidth() - $width) / 2);
+                $source->cropImage($width, $height, $r, 0);
+                $source->writeImage($fullUploadPath . DIRECTORY_SEPARATOR . $fileName);
+
+                return true;
+            }
+            $source->thumbnailImage($width, 0);
+            $r = (integer)(($source->getImageHeight() - $height) / 2);
+            $source->cropImage($width, $height, 0, $r);
+            $source->writeImage($fullUploadPath . DIRECTORY_SEPARATOR . $fileName);
+
+            return true;
+        } else {
+            throw new AttachModelException('The image is too small (' . $sourceWidth . 'x' . $sourceHeight . ')');
+        }
     }
 }

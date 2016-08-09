@@ -32,7 +32,7 @@
                 .addClass('zk-header')
                 .addClass('zk-header-left')
                 .css({
-                    'width': settings.ZkWidth,
+                    'width': settings.ZkWidth
                 })
             ;
 
@@ -41,7 +41,7 @@
                 .addClass('zk-header-right')
                 .css({
                     'margin-left': '40px',
-                    'width': settings.ZkWidth - 10,
+                    'width': 1 * settings.ZkWidth - 10,
                     'color': 'blue'
                 })
                 .text('Selected')
@@ -164,7 +164,7 @@
 
         // SEARCH LEFT FUNCTION
         var searchV = false;
-        var toid = false;
+        var toid = null;
         var ZkSearch = function () {
             if (searchV == inputSearch.val()) return;
             searchV = inputSearch.val();
@@ -211,18 +211,18 @@
         funcDiv.append(rightAdd).append(leftAdd);
         mainDiv.append(leftDiv).append(funcDiv).append(rightDiv);
         if (settings.ZkRange) {
-            rightHeader.css({'width': settings.ZkWidth + 40 - 10});
+            rightHeader.css({'width': 1 * settings.ZkWidth + 40 - 10});
             mainDiv.append(rangeDiv.append(topAdd).append(bottomAdd));
         }
         generalDiv.append(mainDiv);
-        if (settings.ZkDescr) {
+        if (settings.ZkDescrUrl) {
             generalDiv.append(descrDiv);
         }
         originalSelect.after(generalDiv);
 
         $('#zk-general-div__' + originalId + ' .zk-main-div .zk-child-div ul li').click(function (e) {
             e.preventDefault();
-            if (settings.ZkDescr) {
+            if (settings.ZkDescrUrl) {
                 triggerDescr($(this).data('idx'));
             }
             var ind = $(this).index();
@@ -355,17 +355,16 @@
                     .attr('selected', true);
                 originalSelect.append(_option);
             });
-        }
+        };
 
         var triggerDescr = function (id) {
-            if (settings.ZkDescr.route) {
-                $.get(Routing.generate(settings.ZkDescr.route, {'id': id}),
-                    function (data) {
+            if (settings.ZkDescrUrl) {
+                $.get(ZkDescrUrl, function (data) {
                         $('#zk-general-div__' + originalId + ' .zk-descr-div').html(data);
                     });
             }
         };
-    }
+    };
 
 
     $.fn.ZkMultiSelectWidget.defaults = {
@@ -373,7 +372,7 @@
         ZkWidth: 200,
         ZkSearch: false,
         ZkRange: false,
-        ZkDescr: false,
+        ZkDescrUrl: false,
         ZkOptionsDisabled: []
     };
 

@@ -3,10 +3,10 @@
 namespace Zk2\UsefulBundle\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
-use Zk2\UsefulBundle\Model\AttachModelException;
 
 class UsefulFormController extends Controller
 {
@@ -15,59 +15,56 @@ class UsefulFormController extends Controller
      */
     public function dependentEntityAction(Request $request)
     {
-        $translator = $this->get('translator');
-
-        $em_name = $request->get('em_name');
-        $em = $this->get('doctrine')->getManager($em_name);
-
-        $parent_id = $request->get('parent_id');
-        $empty_value = $request->get('empty_value');
+        $emName = $request->get('em_name');
+        $parentId = $request->get('parent_id');
+        $emptyValue = $request->get('empty_value');
         $class = $request->get('class');
-        $parent_field = $request->get('parent_field');
+        $parentField = $request->get('parent_field');
         $property = $request->get('property');
-        $order_property = $request->get('order_property');
-        $order_direction = $request->get('order_direction');
-        $no_result_msg = $request->get('no_result_msg');
+        $orderProperty = $request->get('order_property');
+        $orderDirection = $request->get('order_direction');
+        $noResultMsg = $request->get('no_result_msg');
 
-        if (!$query = $request->get('query')) {
-            $query = sprintf(
-                "SELECT e.id,e.%s FROM %s e WHERE e.id<>0 ",
-                $property,
-                $class
-            );
-            $rootAlias = 'e';
+        $response = '';
+
+        if ('' === $parentId) {
+            $response = sprintf("<option value=\"\">%s</option>", $noResultMsg);
         } else {
-            $query = urldecode($query);
-            $rootAlias = substr($query, 7, 1);
+            $em = $this->get('doctrine')->getManager($emName);
+
+            if (!$query = $request->get('query')) {
+                $query = sprintf("SELECT e.id, e.%s FROM %s e WHERE e.id != 0 ", $property, $class);
+                $rootAlias = 'e.';
+            } else {
+                $query = urldecode($query);
+                preg_match("/^select\s{1,}([A-Za-z0-9_]{1,})\..*$/i", $query, $output);
+                $rootAlias = isset($output[1]) ? $output[1] . '.' : null;
+            }
+
+            $query .= sprintf(
+                " AND %s%s=%s ORDER BY %s%s %s",
+                $rootAlias,
+                $parentField,
+                $parentId,
+                $rootAlias,
+                $orderProperty,
+                $orderDirection
+            );
+
+            $results = $em->createQuery($query)->getScalarResult();
+            if (empty($results)) {
+                $response = sprintf("<option value=\"\">%s</option>", $noResultMsg);
+            } else {
+                if ($emptyValue) {
+                    $response .= sprintf("<option value=\"\">%s</option>", $emptyValue);
+                }
+                foreach ($results as $result) {
+                    $response .= sprintf("<option value=\"%d\">%s</option>", $result['id'], $result[$property]);
+                }
+            }
         }
 
-        $query .= sprintf(
-            " AND %s.%s='%s' ORDER BY %s.%s %s",
-            $rootAlias,
-            $parent_field,
-            $parent_id,
-            $rootAlias,
-            $order_property,
-            $order_direction
-        );
-
-        $results = $em->createQuery($query)
-            ->getScalarResult();
-        $html = '';
-
-        if (empty($results)) {
-            return new Response('<option value="">'.$translator->trans($no_result_msg).'</option>');
-        }
-
-        if ($empty_value) {
-            $html .= '<option value="">'.$translator->trans($empty_value).'</option>';
-        }
-
-        foreach ($results as $result) {
-            $html .= sprintf("<option value=\"%d\">%s</option>", $result['id'], $result[$property]);
-        }
-
-        return new Response($html);
+        return new Response($response);
     }
 
     /**
@@ -75,43 +72,44 @@ class UsefulFormController extends Controller
      */
     public function entityAjaxAutocompleteAction(Request $request)
     {
-        $em_name = $request->get('em_name');
-        $em = $this->get('doctrine')->getManager($em_name);
         $res = array();
 
         if ($class = $request->get('class')) {
+            $emName = $request->get('em_name');
+            $em = $this->get('doctrine')->getManager($emName);
             $property = $request->get('property');
             $prop = $request->get('prop');
-            $condition_operator = $request->get('condition_operator');
-            $max_rows = $request->get('max_rows');
+            $conditionOperator = $request->get('condition_operator');
+            $maxRows = $request->get('max_rows');
 
-            switch ($condition_operator) {
+            switch ($conditionOperator) {
                 case "begins_with":
-                    $like = $prop.'%';
+                    $like = $prop . '%';
                     break;
                 case "ends_with":
-                    $like = '%'.$prop;
+                    $like = '%' . $prop;
                     break;
                 case "contains":
-                    $like = '%'.$prop.'%';
+                    $like = '%' . $prop . '%';
                     break;
                 default:
-                    throw new \Exception('Unexpected value of parameter "condition_operator"');
+                    throw new \RuntimeException('Unexpected value of parameter "condition_operator"');
             }
 
             if (!$query = $request->get('query')) {
-                $query = sprintf("SELECT e.id,e.%s FROM %s e WHERE e.id>0 ", $property, $class);
-                $rootAlias = 'e';
+                $query = sprintf("SELECT e.id, e.%s FROM %s e WHERE e.id > 0 ", $property, $class);
+                $rootAlias = 'e.';
             } else {
                 $query = urldecode($query);
-                $rootAlias = substr($query, 7, 1);
+                preg_match("/^select\s{1,}([A-Za-z0-9_]{1,})\..*$/i", $query, $output);
+                $rootAlias = isset($output[1]) ? $output[1] . '.' : null;
             }
 
-            $query .= sprintf(" AND LOWER(%s.%s) LIKE LOWER(:like) ", $rootAlias, $property);
+            $query .= sprintf(" AND LOWER(%s%s) LIKE LOWER(:like) ", $rootAlias, $property);
 
             $results = $em->createQuery($query)
                 ->setParameter('like', $like)
-                ->setMaxResults($max_rows)
+                ->setMaxResults($maxRows)
                 ->getScalarResult();
 
             foreach ($results as $r) {
@@ -119,7 +117,7 @@ class UsefulFormController extends Controller
             }
         }
 
-        return new Response(json_encode(array('options' => $res)), 200, array('Content-Type' => 'application/json'));
+        return new JsonResponse(array('options' => $res));
     }
 
     /**
@@ -136,19 +134,19 @@ class UsefulFormController extends Controller
             $src = implode('', $src);
         }
         $response = array('status' => 'not_saved', 'data' => '');
-        $total_class = $request->request->get('total_class');
-        $total_id = $request->request->get('total_id');
-        $total_method = $request->request->get('total_method');
-        $parent_class = $request->request->get('parent_class');
-        $parent_id = $request->request->get('parent_id');
-        $parent_method = $request->request->get('parent_method');
-        if (class_exists($total_class)) {
+        $totalClass = $request->request->get('total_class');
+        $totalId = $request->request->get('total_id');
+        $totalProperty = $request->request->get('total_property');
+        $parentClass = $request->request->get('parent_class');
+        $parentId = $request->request->get('parent_id');
+        $parentProperty = $request->request->get('parent_property');
+        if (class_exists($totalClass)) {
             $em = $this->getDoctrine()->getManager();
-            $object = is_numeric($total_id) ? $em->getRepository($total_class)->find($total_id) : new $total_class();
-            if ($parent_class and class_exists($parent_class) and $parent_id and $parent_method) {
-                if (!$parent_object = $em->getRepository($parent_class)->find($parent_id) or !method_exists(
-                        $parent_object,
-                        $parent_method
+            $object = is_numeric($totalId) ? $em->getRepository($totalClass)->find($totalId) : new $totalClass();
+            if ($parentClass and class_exists($parentClass) and $parentId and $parentProperty) {
+                if (!$parentObject = $em->getRepository($parentClass)->find($parentId) or !method_exists(
+                        $parentObject,
+                        $parentProperty
                     )
                 ) {
                     return new Response(
@@ -157,33 +155,34 @@ class UsefulFormController extends Controller
                         array('Content-Type' => 'application/json')
                     );
                 }
-                $parent_object->$parent_method($object);
+                $parentObject->$parentProperty($object);
             }
             $mimeType = $request->request->get('mimeType');
-            $file_name = $request->request->get('name');
-            $tmp_file_name = sha1(uniqid(mt_rand(), true));
-            file_put_contents('/tmp/'.$tmp_file_name, base64_decode($src));
+            $fileName = $request->request->get('name');
+            $tmpFileName = sha1(uniqid(mt_rand(), true));
+            file_put_contents(sys_get_temp_dir() . DIRECTORY_SEPARATOR . $tmpFileName, base64_decode($src));
             $file = new UploadedFile(
-                '/tmp/'.$tmp_file_name,
-                $file_name,
+                sys_get_temp_dir() . DIRECTORY_SEPARATOR . $tmpFileName,
+                $fileName,
                 $mimeType
             );
-            if (method_exists($object, $total_method)) {
-                $object->setTotalFile($file);
-                $object->$total_method($file_name);
-                $get_total_method = str_replace('set', 'get', $total_method);
+            if (method_exists($object, $totalProperty)) {
                 try {
+                    $getterTotalProperty = substr_replace($totalProperty, 'get', 0, 3);
+                    $object->setTotalFile($file);
+                    $object->uploadImage();
                     $em->persist($object);
                     $em->flush();
-                    $response = array('status' => 'success', 'data' => $object->$get_total_method());
-                } catch (AttachModelException $e) {
-                    $response = array('status' => 'error_size', 'data' => $e->getMessage());
+                    $response = array(
+                        'status' => 'success',
+                        'data' => $object->getUploadPath() . DIRECTORY_SEPARATOR . $object->$getterTotalProperty()
+                    );
                 } catch (\Exception $e) {
-                    $response = array('status' => 'error', 'data' => 'Error download');
+                    $response = array('status' => 'AttachModelException', 'data' => $e->getMessage());
                 }
             }
         }
 
-        return new Response(json_encode($response), 200, array('Content-Type' => 'application/json'));
+        return new JsonResponse($response);
     }
 }

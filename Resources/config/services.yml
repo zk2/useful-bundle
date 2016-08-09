@@ -24,25 +24,23 @@ services:
             - { name: form.type, alias: zk2_useful_select2_multiple_entity }
     
     zk2_useful.multiselect_choice.form.type:
-        class: Zk2\UsefulBundle\Form\Type\Zk2MultiSelectType
-        arguments: ["choice"]
+        class: Zk2\UsefulBundle\Form\Type\Zk2MultiSelectChoiceType
         tags:
             - { name: form.type, alias: zk2_useful_multiselect_choice_type }
     
     zk2_useful.multiselect_entity.form.type:
-        class: Zk2\UsefulBundle\Form\Type\Zk2MultiSelectType
-        arguments: ["entity"]
+        class: Zk2\UsefulBundle\Form\Type\Zk2MultiSelectEntityType
         tags:
             - { name: form.type, alias: zk2_useful_multiselect_entity_type }
 
-    zk2.useful.base.file.type:
-        class: Zk2\UsefulBundle\Form\Type\ZkFileType
-        arguments: ["base"]
-        tags:
-            - { name: form.type, alias: zk2_useful_base_file_type }
+#    zk2.useful.base.file.type:
+#        class: Zk2\UsefulBundle\Form\Type\ZkFileType
+#        arguments: ['base']
+#        tags:
+#            - { name: form.type, alias: zk2_useful_base_file_type }
 
-    zk2.useful.thumbnail.file.type:
-        class: Zk2\UsefulBundle\Form\Type\ZkFileType
-        arguments: ["thumbnail"]
-        tags:
-            - { name: form.type, alias: zk2_useful_thumbnail_file_type }
+#    zk2.useful.thumbnail.file.type:
+#        class: Zk2\UsefulBundle\Form\Type\ZkFileType
+#        arguments: ['thumbnail']
+#        tags:
+#            - { name: form.type, alias: zk2_useful_thumbnail_file_type }

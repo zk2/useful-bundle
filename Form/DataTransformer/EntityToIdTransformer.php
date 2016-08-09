@@ -49,7 +49,7 @@ class EntityToIdTransformer implements DataTransformerInterface
             throw new UnexpectedTypeException($id, 'numeric '.$id);
         }
 
-        $entity = $this->em->getRepository($this->class)->findOneById($id);
+        $entity = $this->em->getRepository($this->class)->find($id);
 
         if ($entity === null) {
             throw new TransformationFailedException(sprintf('The entity with key "%s" could not be found', $id));

@@ -8,24 +8,12 @@ use Symfony\Component\Form\FormView;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
- * Zk2MultiSelectType
+ * Zk2MultiSelectAbscractType
  * Implements the widget type "multiselect" in form template
  *
  */
-class Zk2MultiSelectType extends AbstractType
+abstract class Zk2MultiSelectAbscractType extends AbstractType
 {
-    protected $parent_type;
-
-    /**
-     * Constructor
-     *
-     * @param string $parent_type
-     */
-    public function __construct($parent_type)
-    {
-        $this->parent_type = $parent_type;
-    }
-
     /**
      * {@inheritdoc}
      */
@@ -33,11 +21,13 @@ class Zk2MultiSelectType extends AbstractType
     {
         $resolver->setDefaults(
             array(
+                'expanded' => false,
+                'multiple' => true,
                 'ZkHeight' => 200,
                 'ZkWidth' => 200,
-                'ZkSearch' => true,
-                'ZkRange' => false,
-                'ZkDescr' => false,
+                'ZkSearch' => 1,
+                'ZkRange' => 0,
+                'ZkDescrRout' => 0,
                 'ZkOptionsDisabled' => '[]',
             )
         );
@@ -57,26 +47,9 @@ class Zk2MultiSelectType extends AbstractType
                 'ZkWidth' => $options['ZkWidth'],
                 'ZkSearch' => $options['ZkSearch'],
                 'ZkRange' => $options['ZkRange'],
-                'ZkDescr' => $options['ZkDescr'],
+                'ZkDescrRout' => $options['ZkDescrRout'],
                 'ZkOptionsDisabled' => $options['ZkOptionsDisabled'],
             )
         );
-    }
-
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getParent()
-    {
-        return $this->parent_type;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getName()
-    {
-        return sprintf("zk2_useful_multiselect_%s_type", $this->parent_type);
     }
 }
