@@ -2,7 +2,7 @@ $(function () {
     /////////////////////////////////////
     //   Dependent Entity
     /////////////////////////////////////
-    if (window.entityAjaxAutocompleteParameters !== undefined) {
+    if (window.dependentEntityParameters !== undefined) {
         $.each(dependentEntityParameters, function (key, obj) {
             var el = $(obj.total_element);
             var parent_el = $('#' + key);
