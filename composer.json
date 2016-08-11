@@ -1,7 +1,7 @@
 {
     "name": "zk2/useful-bundle",
     "description": "Symfony2 Zk2UsefulBundle - make typical things easier",
-    "version" : "2.0.1",
+    "version" : "2.0.2",
     "type" : "symfony-bundle",
     "homepage": "https://github.com/zk2/useful-bundle",
     "license": "MIT",
