@@ -105,7 +105,7 @@ trait AttachModelTrait
     }
 
     /**
-     * Get totalFile
+     * Get MinPrefix
      *
      * @return string
      */
@@ -154,7 +154,7 @@ trait AttachModelTrait
     {
         return
             rtrim(
-                rtrim($this->getFullWebPath(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $this->getUploadPath(),
+                rtrim($this->getFullWebPath(), DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.$this->getUploadPath(),
                 DIRECTORY_SEPARATOR
             );
     }
@@ -182,20 +182,20 @@ trait AttachModelTrait
             }
             $fileName = sha1(uniqid(mt_rand(), true));
             if (null !== $ext) {
-                $fileName .= '.' . $ext;
+                $fileName .= '.'.$ext;
             }
         } else {
-            if (!$ext = substr($fileName, strrpos($fileName, '.') + 1)) {
-                if ($ex = $this->totalFile->getClientOriginalExtension()) {
-                    $fileName .= '.' . $ex;
-                }
+            if ($this->totalFile->getClientOriginalExtension()) {
+                $fileName .= '.'.$this->totalFile->getClientOriginalExtension();
+            } elseif ($this->totalFile->getExtension()) {
+                $fileName .= '.'.$this->totalFile->getExtension();
             }
         }
 
         $fullUploadPath = $this->getFullUploadPath();
         if (!is_dir($fullUploadPath)) {
             if (!mkdir($fullUploadPath, 0775, true)) {
-                throw new AttachModelException('Not possible create UploadDirectory: '. $fullUploadPath);
+                throw new AttachModelException('Not possible create UploadDirectory: '.$fullUploadPath);
             }
         }
 
@@ -210,7 +210,7 @@ trait AttachModelTrait
             if ($this->widthHeightPreview) {
                 $this->resize(
                     $fullUploadPath,
-                    $this->getMinPrefix() . $fileName,
+                    $this->getMinPrefix().$fileName,
                     $this->widthHeightPreview
                 );
             }
@@ -218,7 +218,7 @@ trait AttachModelTrait
 
         if (!$move) {
             $source = new \Imagick($this->totalFile->getRealPath());
-            $source->writeImage($fullUploadPath . DIRECTORY_SEPARATOR . $fileName);
+            $source->writeImage($fullUploadPath.DIRECTORY_SEPARATOR.$fileName);
         }
 
         return $fileName;
@@ -243,7 +243,7 @@ trait AttachModelTrait
         $ext = substr($fileName, strrpos($fileName, '.') + 1);
 
         if (!in_array($ext, array('jpg', 'png', 'gif', 'jpeg'))) {
-            throw new AttachModelException('Only JPG, JPEG, GIF or PNG format... ' . $ext);
+            throw new AttachModelException('Only JPG, JPEG, GIF or PNG format... '.$ext);
         }
 
         $source = new \Imagick(realpath($this->totalFile->getRealPath()));
@@ -253,9 +253,12 @@ trait AttachModelTrait
         $height = $widthHeight[1];
 
         if ($width == 0 or $height == 0) {
-            if ($width) $source->thumbnailImage($width, 0);
-            elseif ($height) $source->thumbnailImage(0, $height);
-            $source->writeImage($fullUploadPath . DIRECTORY_SEPARATOR . $fileName);
+            if ($width) {
+                $source->thumbnailImage($width, 0);
+            } elseif ($height) {
+                $source->thumbnailImage(0, $height);
+            }
+            $source->writeImage($fullUploadPath.DIRECTORY_SEPARATOR.$fileName);
 
             return true;
         } elseif ($sourceWidth >= $width and $sourceHeight >= $height) {
@@ -263,18 +266,18 @@ trait AttachModelTrait
                 $source->thumbnailImage(0, $height);
                 $r = (integer)(($source->getImageWidth() - $width) / 2);
                 $source->cropImage($width, $height, $r, 0);
-                $source->writeImage($fullUploadPath . DIRECTORY_SEPARATOR . $fileName);
+                $source->writeImage($fullUploadPath.DIRECTORY_SEPARATOR.$fileName);
 
                 return true;
             }
             $source->thumbnailImage($width, 0);
             $r = (integer)(($source->getImageHeight() - $height) / 2);
             $source->cropImage($width, $height, 0, $r);
-            $source->writeImage($fullUploadPath . DIRECTORY_SEPARATOR . $fileName);
+            $source->writeImage($fullUploadPath.DIRECTORY_SEPARATOR.$fileName);
 
             return true;
         } else {
-            throw new AttachModelException('The image is too small (' . $sourceWidth . 'x' . $sourceHeight . ')');
+            throw new AttachModelException('The image is too small ('.$sourceWidth.'x'.$sourceHeight.')');
         }
     }
 }
