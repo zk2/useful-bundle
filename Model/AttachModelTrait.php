@@ -5,7 +5,6 @@ namespace Zk2\UsefulBundle\Model;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\Validator\Constraints as Assert;
 use Zk2\UsefulBundle\Zk2UsefulBundle;
-use Zk2\UsefulBundle\Model\AttachModelException;
 
 /**
  * AttachModelTrait
@@ -22,6 +21,11 @@ trait AttachModelTrait
      * )
      */
     protected $totalFile;
+
+    /**
+     * @var string $baseSide
+     */
+    protected $baseSide = 'width';
 
     /**
      * @var array $widthHeight
@@ -66,6 +70,19 @@ trait AttachModelTrait
      * @return string
      */
     abstract public function uploadImage();
+
+    /**
+     * @param $baseSide
+     * @throws \Zk2\UsefulBundle\Model\AttachModelException
+     */
+    public function setBaseSide($baseSide)
+    {
+        $baseSide = strtolower($baseSide);
+        if (!in_array($baseSide, array('width', 'height'))) {
+            throw new AttachModelException('Base side is incorrect...');
+        }
+        $this->baseSide = $baseSide;
+    }
 
     /**
      * Set Width Height
@@ -299,9 +316,15 @@ trait AttachModelTrait
 
                 return true;
             }
-            $source->thumbnailImage($width, 0);
-            $r = (integer)(($source->getImageHeight() - $height) / 2);
-            $source->cropImage($width, $height, 0, $r);
+            if ('width' == $this->baseSide) {
+                $source->thumbnailImage($width, 0);
+                $r = (integer)(($source->getImageHeight() - $height) / 2);
+                $source->cropImage($width, $height, 0, $r);
+            } else {
+                $source->thumbnailImage(0, $height);
+                $r = (integer)(($source->getImageWidth() - $width) / 2);
+                $source->cropImage($width, $height, $r, 0);
+            }
             $source->writeImage($fullUploadPath.DIRECTORY_SEPARATOR.$fileName);
 
             return true;
