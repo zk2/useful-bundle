@@ -44,9 +44,14 @@ trait AttachModelTrait
     protected $minHeight;
 
     /**
-     * @var string $minPrefix
+     * @var string $previewPrefix
      */
-    protected $minPrefix = 'min_';
+    protected $previewPrefix = 'preview_';
+
+    /**
+     * @var string $originalPrefix
+     */
+    protected $originalPrefix = '';
 
     /**
      * Get upload path
@@ -109,9 +114,33 @@ trait AttachModelTrait
      *
      * @return string
      */
-    public function getMinPrefix()
+    public function getPreviewPrefix()
     {
-        return $this->minPrefix;
+        return $this->previewPrefix;
+    }
+
+    /**
+     * @param string $previewPrefix
+     */
+    public function setPreviewPrefix($previewPrefix)
+    {
+        $this->previewPrefix = $previewPrefix;
+    }
+
+    /**
+     * @return string
+     */
+    public function getOriginalPrefix()
+    {
+        return $this->originalPrefix;
+    }
+
+    /**
+     * @param string $originalPrefix
+     */
+    public function setOriginalPrefix($originalPrefix)
+    {
+        $this->originalPrefix = $originalPrefix;
     }
 
     /**
@@ -204,13 +233,13 @@ trait AttachModelTrait
         if ($this->widthHeight) {
             $move = $this->resize(
                 $fullUploadPath,
-                $fileName,
+                $this->getOriginalPrefix().$fileName,
                 $this->widthHeight
             );
             if ($this->widthHeightPreview) {
                 $this->resize(
                     $fullUploadPath,
-                    $this->getMinPrefix().$fileName,
+                    $this->getPreviewPrefix().$fileName,
                     $this->widthHeightPreview
                 );
             }
@@ -218,7 +247,7 @@ trait AttachModelTrait
 
         if (!$move) {
             $source = new \Imagick($this->totalFile->getRealPath());
-            $source->writeImage($fullUploadPath.DIRECTORY_SEPARATOR.$fileName);
+            $source->writeImage($fullUploadPath.DIRECTORY_SEPARATOR.$this->getOriginalPrefix().$fileName);
         }
 
         return $fileName;
