@@ -7,6 +7,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Zk2\UsefulBundle\Model\AttachAndResizeModelTrait;
 
 class UsefulFormController extends Controller
 {
@@ -38,7 +39,7 @@ class UsefulFormController extends Controller
             } else {
                 $query = urldecode($query);
                 preg_match("/^select\s{1,}([A-Za-z0-9_]{1,})\..*$/i", $query, $output);
-                $rootAlias = isset($output[1]) ? $output[1] . '.' : null;
+                $rootAlias = isset($output[1]) ? $output[1].'.' : null;
             }
 
             $query .= sprintf(
@@ -84,13 +85,13 @@ class UsefulFormController extends Controller
 
             switch ($conditionOperator) {
                 case "begins_with":
-                    $like = $prop . '%';
+                    $like = $prop.'%';
                     break;
                 case "ends_with":
-                    $like = '%' . $prop;
+                    $like = '%'.$prop;
                     break;
                 case "contains":
-                    $like = '%' . $prop . '%';
+                    $like = '%'.$prop.'%';
                     break;
                 default:
                     throw new \RuntimeException('Unexpected value of parameter "condition_operator"');
@@ -102,7 +103,7 @@ class UsefulFormController extends Controller
             } else {
                 $query = urldecode($query);
                 preg_match("/^select\s{1,}([A-Za-z0-9_]{1,})\..*$/i", $query, $output);
-                $rootAlias = isset($output[1]) ? $output[1] . '.' : null;
+                $rootAlias = isset($output[1]) ? $output[1].'.' : null;
             }
 
             $query .= sprintf(" AND LOWER(%s%s) LIKE LOWER(:like) ", $rootAlias, $property);
@@ -142,6 +143,7 @@ class UsefulFormController extends Controller
         $parentProperty = $request->request->get('parent_property');
         if (class_exists($totalClass)) {
             $em = $this->getDoctrine()->getManager();
+            /** @var AttachAndResizeModelTrait $object */
             $object = is_numeric($totalId) ? $em->getRepository($totalClass)->find($totalId) : new $totalClass();
             if ($parentClass and class_exists($parentClass) and $parentId and $parentProperty) {
                 if (!$parentObject = $em->getRepository($parentClass)->find($parentId) or !method_exists(
@@ -160,22 +162,22 @@ class UsefulFormController extends Controller
             $mimeType = $request->request->get('mimeType');
             $fileName = $request->request->get('name');
             $tmpFileName = sha1(uniqid(mt_rand(), true));
-            file_put_contents(sys_get_temp_dir() . DIRECTORY_SEPARATOR . $tmpFileName, base64_decode($src));
+            file_put_contents(sys_get_temp_dir().DIRECTORY_SEPARATOR.$tmpFileName, base64_decode($src));
             $file = new UploadedFile(
-                sys_get_temp_dir() . DIRECTORY_SEPARATOR . $tmpFileName,
+                sys_get_temp_dir().DIRECTORY_SEPARATOR.$tmpFileName,
                 $fileName,
                 $mimeType
             );
             if (method_exists($object, $totalProperty)) {
                 try {
                     $getterTotalProperty = substr_replace($totalProperty, 'get', 0, 3);
-                    $object->setTotalFile($file);
+                    $object->setSourceFile($file);
                     $object->uploadImage();
                     $em->persist($object);
                     $em->flush();
                     $response = array(
                         'status' => 'success',
-                        'data' => $object->getUploadPath() . DIRECTORY_SEPARATOR . $object->$getterTotalProperty()
+                        'data' => $object->getUploadPath().DIRECTORY_SEPARATOR.$object->$getterTotalProperty(),
                     );
                 } catch (\Exception $e) {
                     $response = array('status' => 'AttachModelException', 'data' => $e->getMessage());

@@ -8,13 +8,11 @@ use Zk2\UsefulBundle\Zk2UsefulBundle;
 
 /**
  * AttachModelTrait
- *
- * DEPRECATED !!!!!!!!! Use AttachAndResizeModelTrait
  */
-trait AttachModelTrait
+trait AttachAndResizeModelTrait
 {
     /**
-     * @var UploadedFile $totalFile
+     * @var UploadedFile $sourceFile
      * @Assert\File(
      *     maxSizeMessage = "Max file size 20Mb",
      *     maxSize = "20480k",
@@ -22,42 +20,32 @@ trait AttachModelTrait
      *     mimeTypesMessage = "Only JPG, JPEG, GIF or PNG format."
      * )
      */
-    protected $totalFile;
+    protected $sourceFile;
 
     /**
-     * @var string $baseSide
+     * @var string $defaultBaseSide
      */
-    protected $baseSide = 'width';
+    protected $defaultBaseSide = 'least_side';
 
     /**
      * @var array $widthHeight
      */
-    protected $widthHeight = array();
+    protected $widthHeight = array(0, 0);
 
     /**
-     * @var array $widthHeightPreview
+     * @var array $childrenWidthHeight
      */
-    protected $widthHeightPreview = array();
+    protected $childrenWidthHeight = array();
 
     /**
-     * @var integer $minWidth
+     * @var string $originalSuffix
      */
-    protected $minWidth;
+    protected $originalSuffix = 'main';
 
     /**
-     * @var integer $minHeight
+     * @var array $sides
      */
-    protected $minHeight;
-
-    /**
-     * @var string $previewPrefix
-     */
-    protected $previewPrefix = 'preview_';
-
-    /**
-     * @var string $originalPrefix
-     */
-    protected $originalPrefix = '';
+    protected $sides = array('width', 'height', 'larger_side', 'least_side');
 
     /**
      * Get upload path
@@ -74,16 +62,16 @@ trait AttachModelTrait
     abstract public function uploadImage();
 
     /**
-     * @param $baseSide
+     * @param $defaultBaseSide
      * @throws \Zk2\UsefulBundle\Model\AttachModelException
      */
-    public function setBaseSide($baseSide)
+    public function setDefaultBaseSide($defaultBaseSide)
     {
-        $baseSide = strtolower($baseSide);
-        if (!in_array($baseSide, array('width', 'height'))) {
-            throw new AttachModelException('Base side is incorrect...');
+        $defaultBaseSide = strtolower($defaultBaseSide);
+        if (!in_array($defaultBaseSide, $this->sides)) {
+            throw new AttachModelException('Base side is incorrect... Use '.implode(', ', $this->sides));
         }
-        $this->baseSide = $baseSide;
+        $this->defaultBaseSide = $defaultBaseSide;
     }
 
     /**
@@ -92,94 +80,65 @@ trait AttachModelTrait
      * @param integer $width
      * @param integer $height
      */
-    public function setWidthHeight($width, $height = 0)
+    public function setWidthHeight($width, $height)
     {
         $this->widthHeight = array(abs((integer)$width), abs((integer)$height));
     }
 
     /**
-     * Set Width Height Preview
-     *
-     * @param integer $width
-     * @param integer $height
+     * @param array $children
+     * @throws AttachModelException
      */
-    public function setWidthHeightPreview($width, $height = 0)
+    public function setChildrenWidthHeight(array $children)
     {
-        $this->widthHeightPreview = array(abs((integer)$width), abs((integer)$height));
-    }
-
-    /**
-     * Set min Width
-     *
-     * @param integer $width
-     */
-    public function setMinWidth($width)
-    {
-        $this->minWidth = abs((integer)$width);
-    }
-
-    /**
-     * Set min Height
-     *
-     * @param integer $height
-     */
-    public function setMinHeight($height)
-    {
-        $this->minHeight = abs((integer)$height);
-    }
-
-    /**
-     * Get MinPrefix
-     *
-     * @return string
-     */
-    public function getPreviewPrefix()
-    {
-        return $this->previewPrefix;
-    }
-
-    /**
-     * @param string $previewPrefix
-     */
-    public function setPreviewPrefix($previewPrefix)
-    {
-        $this->previewPrefix = $previewPrefix;
+        foreach ($children as $child) {
+            if (!is_array($child) or 2 != count($child) or array_filter(
+                    $child,
+                    function ($val) {
+                        return !is_numeric($val) or $val < 0;
+                    }
+                )
+            ) {
+                throw new AttachModelException('Children must be array, e.g. array(array(300, 200), array(400, 300))');
+            }
+            $this->childrenWidthHeight[implode('x', $child)] = array_values($child);
+        }
     }
 
     /**
      * @return string
      */
-    public function getOriginalPrefix()
+    public function getOriginalSuffix()
     {
-        return $this->originalPrefix;
+        return $this->originalSuffix;
     }
 
     /**
-     * @param string $originalPrefix
+     * @param string $originalSuffix
      */
-    public function setOriginalPrefix($originalPrefix)
+    public function setOriginalSuffix($originalSuffix)
     {
-        $this->originalPrefix = $originalPrefix;
+        $this->originalSuffix = $originalSuffix;
     }
 
     /**
-     * Set totalFile
+     * Set SourceFile
      *
-     * @param UploadedFile $totalFile
+     * @param UploadedFile $sourceFile
      */
-    public function setTotalFile(UploadedFile $totalFile = null)
+    public function setSourceFile(UploadedFile $sourceFile = null)
     {
-        $this->totalFile = $totalFile;
+        $this->sourceFile = $sourceFile;
     }
 
     /**
-     * Get totalFile
+     * Get SourceFile
      *
      * @return string
      */
-    public function getTotalFile()
+    public function getSourceFile()
     {
-        return $this->totalFile;
+        return $this->sourceFile;
     }
 
     /**
@@ -189,7 +148,6 @@ trait AttachModelTrait
      */
     public function getFullWebPath()
     {
-        //return realpath(__DIR__.'/../../../../web');
         return Zk2UsefulBundle::getFullWebPath();
     }
 
@@ -202,7 +160,10 @@ trait AttachModelTrait
     {
         return
             rtrim(
-                rtrim($this->getFullWebPath(), DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.$this->getUploadPath(),
+                rtrim($this->getFullWebPath(), DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.trim(
+                    $this->getUploadPath(),
+                    DIRECTORY_SEPARATOR
+                ),
                 DIRECTORY_SEPARATOR
             );
     }
@@ -216,7 +177,7 @@ trait AttachModelTrait
      */
     public function uploadFile($fileName = null)
     {
-        if (!$this->totalFile instanceof UploadedFile) {
+        if (!$this->sourceFile instanceof UploadedFile) {
             return false;
         }
 
@@ -225,18 +186,18 @@ trait AttachModelTrait
         }
 
         if (null === $fileName) {
-            if (null === $ext = $this->totalFile->guessExtension()) {
-                $ext = $this->totalFile->getExtension();
+            if (null === $ext = $this->sourceFile->guessExtension()) {
+                $ext = $this->sourceFile->getExtension();
             }
             $fileName = sha1(uniqid(mt_rand(), true));
             if (null !== $ext) {
                 $fileName .= '.'.$ext;
             }
         } else {
-            if ($this->totalFile->getClientOriginalExtension()) {
-                $fileName .= '.'.$this->totalFile->getClientOriginalExtension();
-            } elseif ($this->totalFile->getExtension()) {
-                $fileName .= '.'.$this->totalFile->getExtension();
+            if ($this->sourceFile->getClientOriginalExtension()) {
+                $fileName .= '.'.$this->sourceFile->getClientOriginalExtension();
+            } elseif ($this->sourceFile->getExtension()) {
+                $fileName .= '.'.$this->sourceFile->getExtension();
             }
         }
 
@@ -247,31 +208,44 @@ trait AttachModelTrait
             }
         }
 
-        $move = false;
+        $move = $this->resize(
+            $fullUploadPath,
+            $this->buildFileName($fileName, $this->getOriginalSuffix()),
+            $this->widthHeight
+        );
 
-        if ($this->widthHeight) {
-            $move = $this->resize(
+        foreach ($this->childrenWidthHeight as $suffix => $widthHeight) {
+            $this->resize(
                 $fullUploadPath,
-                $this->getOriginalPrefix().$fileName,
-                $this->widthHeight
+                $this->buildFileName($fileName, $suffix),
+                $widthHeight
             );
-            if ($this->widthHeightPreview) {
-                $this->resize(
-                    $fullUploadPath,
-                    $this->getPreviewPrefix().$fileName,
-                    $this->widthHeightPreview
-                );
-            }
         }
 
         if (!$move) {
-            $source = new \Imagick($this->totalFile->getRealPath());
-            $source->writeImage($fullUploadPath.DIRECTORY_SEPARATOR.$this->getOriginalPrefix().$fileName);
+            $source = new \Imagick($this->sourceFile->getRealPath());
+            $source->writeImage(
+                $fullUploadPath.DIRECTORY_SEPARATOR.$this->buildFileName($fileName, $this->getOriginalSuffix())
+            );
         }
 
         return $fileName;
     }
 
+    /**
+     * @param string $fileName
+     * @param string $suffix
+     * @return string
+     */
+    protected function buildFileName($fileName, $suffix)
+    {
+        if ((string)$suffix !== '') {
+            $arr = explode('.', $fileName);
+            $ext = array_pop($arr);
+            $fileName = implode('.', $arr).'_'.$suffix.'.'.$ext;
+        }
+        return $fileName;
+    }
 
     /**
      * Resize image
@@ -294,7 +268,7 @@ trait AttachModelTrait
             throw new AttachModelException('Only JPG, JPEG, GIF or PNG format... '.$ext);
         }
 
-        $source = new \Imagick(realpath($this->totalFile->getRealPath()));
+        $source = new \Imagick(realpath($this->sourceFile->getRealPath()));
         $sourceWidth = $source->getImageWidth();
         $sourceHeight = $source->getImageHeight();
         $width = $widthHeight[0];
@@ -318,7 +292,18 @@ trait AttachModelTrait
 
                 return true;
             }
-            if ('width' == $this->baseSide) {
+
+            $defaultBaseSide = $this->defaultBaseSide;
+            switch ($defaultBaseSide) {
+                case 'larger_side':
+                    $defaultBaseSide = $width > $height ? 'width' : 'height';
+                    break;
+                case 'least_side':
+                    $defaultBaseSide = $width < $height ? 'width' : 'height';
+                    break;
+            }
+
+            if ('width' == $defaultBaseSide) {
                 $source->thumbnailImage($width, 0);
                 $r = (integer)(($source->getImageHeight() - $height) / 2);
                 $source->cropImage($width, $height, 0, $r);
