@@ -19,18 +19,16 @@ abstract class Zk2MultiSelectAbscractType extends AbstractType
      */
     public function configureOptions(OptionsResolver $resolver)
     {
-        $resolver->setDefaults(
-            array(
-                'expanded' => false,
-                'multiple' => true,
-                'ZkHeight' => 200,
-                'ZkWidth' => 200,
-                'ZkSearch' => 1,
-                'ZkRange' => 0,
-                'ZkDescrRout' => 0,
-                'ZkOptionsDisabled' => '[]',
-            )
-        );
+        $resolver->setDefaults([
+            'expanded' => false,
+            'multiple' => true,
+            'ZkHeight' => 200,
+            'ZkWidth' => 200,
+            'ZkSearch' => 1,
+            'ZkRange' => 0,
+            'ZkDescrRout' => 0,
+            'ZkOptionsDisabled' => '[]',
+        ]);
     }
 
     /**
@@ -42,14 +40,14 @@ abstract class Zk2MultiSelectAbscractType extends AbstractType
 
         $view->vars = array_replace(
             $view->vars,
-            array(
+            [
                 'ZkHeight' => $options['ZkHeight'],
                 'ZkWidth' => $options['ZkWidth'],
                 'ZkSearch' => $options['ZkSearch'],
                 'ZkRange' => $options['ZkRange'],
                 'ZkDescrRout' => $options['ZkDescrRout'],
                 'ZkOptionsDisabled' => $options['ZkOptionsDisabled'],
-            )
+            ]
         );
     }
 }

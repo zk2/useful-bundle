@@ -2,17 +2,22 @@
 
 namespace Zk2\UsefulBundle\Controller;
 
+use Doctrine\ORM\EntityManager;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Zk2\UsefulBundle\Model\AttachAndResizeModelTrait;
 
 class UsefulFormController extends Controller
 {
     /**
      * DependentEntity
+     *
+     * @param Request $request
+     * @return Response
      */
     public function dependentEntityAction(Request $request)
     {
@@ -70,16 +75,20 @@ class UsefulFormController extends Controller
 
     /**
      * EntityAjaxAutocomplete
+     *
+     * @param Request $request
+     * @return Response
      */
     public function entityAjaxAutocompleteAction(Request $request)
     {
-        $res = array();
+        $res = [];
 
-        if ($class = $request->get('class')) {
+        if ($class = $request->get('class') and mb_strlen($request->get('prop'))) {
             $emName = $request->get('em_name');
-            $em = $this->get('doctrine')->getManager($emName);
+            /** @var EntityManager $em */
+            $em = $this->getDoctrine()->getManager($emName);
             $property = $request->get('property');
-            $prop = $request->get('prop');
+            $prop = strtolower($request->get('prop'));
             $conditionOperator = $request->get('condition_operator');
             $maxRows = $request->get('max_rows');
 
@@ -106,7 +115,9 @@ class UsefulFormController extends Controller
                 $rootAlias = isset($output[1]) ? $output[1].'.' : null;
             }
 
-            $query .= sprintf(" AND LOWER(%s%s) LIKE LOWER(:like) ", $rootAlias, $property);
+            $dbPlatform = $em->getConnection()->getDatabasePlatform()->getName();
+            $setType = 'postgresql' === $dbPlatform ? '::text' : null;
+            $query .= sprintf(" AND LOWER(%s%s%s) LIKE :like ", $rootAlias, $property, $setType);
 
             $results = $em->createQuery($query)
                 ->setParameter('like', $like)
@@ -114,15 +125,18 @@ class UsefulFormController extends Controller
                 ->getScalarResult();
 
             foreach ($results as $r) {
-                $res[] = array('id' => $r['id'], 'name' => $r[$property]);
+                $res[] = ['id' => $r['id'], 'name' => $r[$property]];
             }
         }
 
-        return new JsonResponse(array('options' => $res));
+        return new JsonResponse(['options' => $res]);
     }
 
     /**
-     * EntityAjaxAutocomplete
+     * FileAjaxUpload
+     *
+     * @param Request $request
+     * @return Response
      */
     public function fileAjaxUploadAction(Request $request)
     {
@@ -134,55 +148,65 @@ class UsefulFormController extends Controller
             unset($src[0]);
             $src = implode('', $src);
         }
-        $response = array('status' => 'not_saved', 'data' => '');
+
         $totalClass = $request->request->get('total_class');
         $totalId = $request->request->get('total_id');
         $totalProperty = $request->request->get('total_property');
         $parentClass = $request->request->get('parent_class');
         $parentId = $request->request->get('parent_id');
         $parentProperty = $request->request->get('parent_property');
-        if (class_exists($totalClass)) {
-            $em = $this->getDoctrine()->getManager();
-            /** @var AttachAndResizeModelTrait $object */
-            $object = is_numeric($totalId) ? $em->getRepository($totalClass)->find($totalId) : new $totalClass();
-            if ($parentClass and class_exists($parentClass) and $parentId and $parentProperty) {
-                if (!$parentObject = $em->getRepository($parentClass)->find($parentId) or !method_exists(
-                        $parentObject,
-                        $parentProperty
-                    )
-                ) {
-                    return new Response(
-                        json_encode(array('status' => 'error', 'data' => 'Error download')),
-                        200,
-                        array('Content-Type' => 'application/json')
-                    );
-                }
-                $parentObject->$parentProperty($object);
-            }
-            $mimeType = $request->request->get('mimeType');
-            $fileName = $request->request->get('name');
-            $tmpFileName = sha1(uniqid(mt_rand(), true));
-            file_put_contents(sys_get_temp_dir().DIRECTORY_SEPARATOR.$tmpFileName, base64_decode($src));
-            $file = new UploadedFile(
-                sys_get_temp_dir().DIRECTORY_SEPARATOR.$tmpFileName,
-                $fileName,
-                $mimeType
+
+        if (!class_exists($totalClass)) {
+            throw new BadRequestHttpException(sprintf('Object "%s" is not found', $totalClass));
+        }
+
+        $em = $this->getDoctrine()->getManager();
+        $object = is_numeric($totalId) ? $em->getRepository($totalClass)->find($totalId) : new $totalClass();
+        $classUses = class_uses($object);
+        if (!isset($classUses[AttachAndResizeModelTrait::class])) {
+            throw new BadRequestHttpException(
+                sprintf('Object "%s" must be extended AttachAndResizeModelTrait', get_class($object))
             );
-            if (method_exists($object, $totalProperty)) {
-                try {
-                    $getterTotalProperty = substr_replace($totalProperty, 'get', 0, 3);
-                    $object->setSourceFile($file);
-                    $object->uploadImage();
-                    $em->persist($object);
-                    $em->flush();
-                    $response = array(
-                        'status' => 'success',
-                        'data' => $object->getUploadPath().DIRECTORY_SEPARATOR.$object->$getterTotalProperty(),
-                    );
-                } catch (\Exception $e) {
-                    $response = array('status' => 'AttachModelException', 'data' => $e->getMessage());
-                }
+        }
+
+        if (!method_exists($object, $totalProperty)) {
+            throw new BadRequestHttpException('Method "%s:%s" is not found', $totalClass, $totalProperty);
+        }
+
+        if ($parentClass) {
+            if (!class_exists($parentClass)) {
+                throw new BadRequestHttpException(sprintf('Parent class "%s" not found', $parentClass));
             }
+            if (!$parentObject = $em->getRepository($parentClass)->find($parentId)) {
+                throw new BadRequestHttpException(sprintf('Parent object "%s" is not found', $parentClass));
+            }
+            if (!method_exists($parentObject, $parentProperty)) {
+                throw new BadRequestHttpException('Method "%s:%s" is not found', $parentClass, $parentProperty);
+            }
+            $parentObject->$parentProperty($object);
+        }
+
+        $mimeType = $request->request->get('mimeType');
+        $fileName = $request->request->get('name');
+        $tmpFileName = sha1(uniqid(mt_rand(), true));
+        file_put_contents(sys_get_temp_dir().DIRECTORY_SEPARATOR.$tmpFileName, base64_decode($src));
+        $file = new UploadedFile(
+            sys_get_temp_dir().DIRECTORY_SEPARATOR.$tmpFileName,
+            $fileName,
+            $mimeType
+        );
+        try {
+            $getterTotalProperty = substr_replace($totalProperty, 'get', 0, 3);
+            $object->setSourceFile($file);
+            $object->uploadImage();
+            $em->persist($object);
+            $em->flush();
+            $response = [
+                'status' => 'success',
+                'data' => $object->getUploadPath().DIRECTORY_SEPARATOR.$object->$getterTotalProperty(),
+            ];
+        } catch (\Exception $e) {
+            $response = ['status' => 'AttachModelException', 'data' => $e->getMessage()];
         }
 
         return new JsonResponse($response);

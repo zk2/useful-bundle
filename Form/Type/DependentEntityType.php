@@ -77,20 +77,18 @@ class DependentEntityType extends AbstractType
 
     public function configureOptions(OptionsResolver $resolver)
     {
-        $resolver->setDefaults(
-            array(
-                'class' => null,
-                'empty_value' => '',
-                'parent_field' => null,
-                'property' => null,
-                'compound' => false,
-                'em_name' => 'default',
-                'query' => null,
-                'no_result_msg' => 'No result',
-                'order_direction' => 'ASC',
-                'order_property' => 'id',
-            )
-        );
+        $resolver->setDefaults([
+            'class' => null,
+            'empty_value' => '',
+            'parent_field' => null,
+            'property' => null,
+            'compound' => false,
+            'em_name' => 'default',
+            'query' => null,
+            'no_result_msg' => 'No result',
+            'order_direction' => 'ASC',
+            'order_property' => 'id',
+        ]);
     }
 
     public function getParent()

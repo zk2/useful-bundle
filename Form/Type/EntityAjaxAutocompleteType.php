@@ -12,6 +12,7 @@ use Symfony\Component\Form\FormView;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Zk2\UsefulBundle\Form\DataTransformer\EntityToPropertyTransformer;
 
+
 class EntityAjaxAutocompleteType extends AbstractType
 {
     private $em;
@@ -69,17 +70,15 @@ class EntityAjaxAutocompleteType extends AbstractType
 
     public function configureOptions(OptionsResolver $resolver)
     {
-        $resolver->setDefaults(
-            array(
-                'class' => null,
-                'property' => null,
-                'condition_operator' => 'begins_with',
-                'em_name' => 'default',
-                'query' => null,
-                'max_rows' => 100,
-                'options' => array(),
-            )
-        );
+        $resolver->setDefaults([
+            'class' => null,
+            'property' => null,
+            'condition_operator' => 'begins_with',
+            'em_name' => 'default',
+            'query' => null,
+            'max_rows' => 100,
+            'options' => [],
+        ]);
     }
 
     public function getBlockPrefix()

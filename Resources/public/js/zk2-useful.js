@@ -105,8 +105,7 @@ $(function () {
         });
         function functionFormat(item) {
             if (item.loading) return 'Searching...';
-            var markup = '<div class="clearfix"><div class="col-sm-12">' + item.name || item.text + '</div></div>';
-            return markup;
+            return '<div class="clearfix"><div class="col-sm-12">' + item.name || item.text + '</div></div>';
         }
         function functionFormatSelection(item) {
             if (item.name) item.text = item.name;

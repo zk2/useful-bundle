@@ -56,17 +56,15 @@ class Select2MultipleEntityType extends AbstractType
 
     public function configureOptions(OptionsResolver $resolver)
     {
-        $resolver->setDefaults(
-            array(
-                'multiple' => true,
-                'class' => null,
-                'property' => 'name',
-                'condition_operator' => 'begins_with',
-                'em_name' => 'default',
-                'max_rows' => 100,
-                'options' => array(),
-            )
-        );
+        $resolver->setDefaults([
+            'multiple' => true,
+            'class' => null,
+            'property' => 'name',
+            'condition_operator' => 'begins_with',
+            'em_name' => 'default',
+            'max_rows' => 100,
+            'options' => [],
+        ]);
     }
 
     public function getBlockPrefix()

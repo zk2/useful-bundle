@@ -3,7 +3,6 @@
 namespace Zk2\UsefulBundle\Model;
 
 use Symfony\Component\HttpFoundation\File\UploadedFile;
-use Symfony\Component\Validator\Constraints as Assert;
 use Zk2\UsefulBundle\Zk2UsefulBundle;
 
 /**
@@ -13,12 +12,6 @@ trait AttachAndResizeModelTrait
 {
     /**
      * @var UploadedFile $sourceFile
-     * @Assert\File(
-     *     maxSizeMessage = "Max file size 20Mb",
-     *     maxSize = "20480k",
-     *     mimeTypes = {"image/jpg", "image/jpeg", "image/gif", "image/png"},
-     *     mimeTypesMessage = "Only JPG, JPEG, GIF or PNG format."
-     * )
      */
     protected $sourceFile;
 
@@ -30,12 +23,12 @@ trait AttachAndResizeModelTrait
     /**
      * @var array $widthHeight
      */
-    protected $widthHeight = array(0, 0);
+    protected $widthHeight = [0, 0];
 
     /**
      * @var array $childrenWidthHeight
      */
-    protected $childrenWidthHeight = array();
+    protected $childrenWidthHeight = [];
 
     /**
      * @var string $originalSuffix
@@ -45,7 +38,7 @@ trait AttachAndResizeModelTrait
     /**
      * @var array $sides
      */
-    protected $sides = array('width', 'height', 'larger_side', 'least_side');
+    protected $sides = ['width', 'height', 'largest_side', 'least_side'];
 
     /**
      * Get upload path
@@ -63,7 +56,7 @@ trait AttachAndResizeModelTrait
 
     /**
      * @param $defaultBaseSide
-     * @throws \Zk2\UsefulBundle\Model\AttachModelException
+     * @throws AttachModelException
      */
     public function setDefaultBaseSide($defaultBaseSide)
     {
@@ -158,14 +151,7 @@ trait AttachAndResizeModelTrait
      */
     public function getFullUploadPath()
     {
-        return
-            rtrim(
-                rtrim($this->getFullWebPath(), DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.trim(
-                    $this->getUploadPath(),
-                    DIRECTORY_SEPARATOR
-                ),
-                DIRECTORY_SEPARATOR
-            );
+        return realpath($this->getFullWebPath().DIRECTORY_SEPARATOR.$this->getUploadPath());
     }
 
     /**
@@ -204,8 +190,11 @@ trait AttachAndResizeModelTrait
         $fullUploadPath = $this->getFullUploadPath();
         if (!is_dir($fullUploadPath)) {
             if (!mkdir($fullUploadPath, 0775, true)) {
-                throw new AttachModelException('Not possible create UploadDirectory: '.$fullUploadPath);
+                throw new AttachModelException(sprintf('Not possible create UploadDirectory %s', $fullUploadPath));
             }
+        }
+        if (!is_writable($fullUploadPath)) {
+            throw new AttachModelException(sprintf('UploadDirectory %s is not writable', $fullUploadPath));
         }
 
         $move = $this->resize(
@@ -223,7 +212,11 @@ trait AttachAndResizeModelTrait
         }
 
         if (!$move) {
-            $source = new \Imagick($this->sourceFile->getRealPath());
+            try {
+                $source = new \Imagick($this->sourceFile->getRealPath());
+            } catch (\ImagickException $e) {
+                throw new AttachModelException($e->getMessage());
+            }
             $source->writeImage(
                 $fullUploadPath.DIRECTORY_SEPARATOR.$this->buildFileName($fileName, $this->getOriginalSuffix())
             );
@@ -244,6 +237,7 @@ trait AttachAndResizeModelTrait
             $ext = array_pop($arr);
             $fileName = implode('.', $arr).'_'.$suffix.'.'.$ext;
         }
+
         return $fileName;
     }
 
@@ -262,13 +256,11 @@ trait AttachAndResizeModelTrait
             return false;
         }
 
-        $ext = substr($fileName, strrpos($fileName, '.') + 1);
-
-        if (!in_array(strtolower($ext), array('jpg', 'png', 'gif', 'jpeg'))) {
-            throw new AttachModelException('Only JPG, JPEG, GIF or PNG format... '.$ext);
+        try {
+            $source = new \Imagick(realpath($this->sourceFile->getRealPath()));
+        } catch (\ImagickException $e) {
+            throw new AttachModelException($e->getMessage());
         }
-
-        $source = new \Imagick(realpath($this->sourceFile->getRealPath()));
         $sourceWidth = $source->getImageWidth();
         $sourceHeight = $source->getImageHeight();
         $width = $widthHeight[0];
@@ -295,7 +287,7 @@ trait AttachAndResizeModelTrait
 
             $defaultBaseSide = $this->defaultBaseSide;
             switch ($defaultBaseSide) {
-                case 'larger_side':
+                case 'largest_side':
                     $defaultBaseSide = $width > $height ? 'width' : 'height';
                     break;
                 case 'least_side':

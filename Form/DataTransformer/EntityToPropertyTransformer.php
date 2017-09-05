@@ -55,7 +55,7 @@ class EntityToPropertyTransformer implements DataTransformerInterface
             return null;
         }
 
-        $entity = $this->em->getRepository($this->class)->findOneBy(array($this->property => $propValue));
+        $entity = $this->em->getRepository($this->class)->findOneBy([$this->property => $propValue]);
 
         if ($entity === null) {
             throw new TransformationFailedException(sprintf('The entity with key "%s" could not be found', $id));

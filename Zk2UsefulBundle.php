@@ -7,6 +7,9 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class Zk2UsefulBundle extends Bundle
 {
+    /**
+     * @var ContainerInterface
+     */
     private static $containerInstance = null;
 
     public function setContainer(ContainerInterface $container = null)

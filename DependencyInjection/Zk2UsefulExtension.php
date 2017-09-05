@@ -60,7 +60,7 @@ class Zk2UsefulExtension extends Extension implements PrependExtensionInterface
                 case 'twig':
                     $container->prependExtensionConfig(
                         $name,
-                        array('form_themes' => array($this->formTemplate))
+                        ['form_themes' => [$this->formTemplate]]
                     );
                     break;
             }
